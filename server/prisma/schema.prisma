@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Direction {
+  id                  String   @id @default(cuid())
+  slug                String   @unique
+  name                String
+  description         String?
+  iconUrl             String?
+  order               Int      @default(0)
+  hasDifficultyLevels Boolean  @default(true)        // J/M/S релевантны для этого направления?
+  isFeatured          Boolean  @default(false)        // помечать огоньком 🔥
+  category            String?                        // "Программирование", "Аналитика", "Креатив"...
+  createdAt           DateTime @default(now())
+
+  topics     Topic[]
+  questions  Question[]
+  interviews Interview[]
+}
+
+model Topic {
+  id          String   @id @default(cuid())
+  directionId String
+  name        String
+  slug        String
+
+  direction  Direction  @relation(fields: [directionId], references: [id], onDelete: Cascade)
+  questions  Question[]
+
+  @@unique([directionId, slug])
+}
+
+model Question {
+  id             String       @id @default(cuid())
+  directionId    String
+  topicId        String?
+  text           String
+  normalizedText String
+  answer         String       @db.Text @default("")
+  difficulty     Difficulty?                          // теперь опциональная
+  type           QuestionType @default(TECHNICAL)     // тех / поведенческий / загадка
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  direction          Direction @relation(fields: [directionId], references: [id], onDelete: Cascade)
+  topic              Topic?    @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  interviewQuestions InterviewQuestion[]
+  resources          Resource[]
+
+  @@unique([directionId, normalizedText])
+}
+
+enum QuestionType {
+  TECHNICAL
+  BEHAVIORAL
+  LOGIC_PUZZLE
+}
+
+enum Difficulty {
+  JUNIOR
+  MIDDLE
+  SENIOR
+}
+
+model Interview {
+  id           String   @id @default(cuid())
+  directionId  String
+  title        String
+  videoUrl     String
+  channelName  String?
+  publishedAt  DateTime?
+  createdAt    DateTime @default(now())
+
+  direction  Direction @relation(fields: [directionId], references: [id], onDelete: Cascade)
+  questions  InterviewQuestion[]
+}
+
+model InterviewQuestion {
+  id          String    @id @default(cuid())
+  interviewId String
+  questionId  String
+
+  interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  question    Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([interviewId, questionId])
+  @@index([questionId])
+  @@index([interviewId])
+}
+
+model Resource {
+  id         String   @id @default(cuid())
+  questionId String
+  title      String
+  url        String
+  type       ResourceType @default(ARTICLE)
+
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+enum ResourceType {
+  ARTICLE
+  VIDEO
+  DOCUMENTATION
+  OTHER
+}

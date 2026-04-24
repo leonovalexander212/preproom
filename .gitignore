@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Environment variables (никогда не коммитим секреты!)
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+build/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.sln
+
+# Prisma — сгенерированный клиент пересобирается локально
+server/generated/
+
+# Xenova transformers — локальные ML-модели (~100МБ)
+server/.cache/
+server/models/
+
+# Кеш дедупликации — генерируется из сырых данных
+server/data/*-dedupe-suggestions.json
+
+# Coverage
+coverage/
