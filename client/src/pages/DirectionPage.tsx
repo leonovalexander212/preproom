@@ -8,12 +8,13 @@ import type { Difficulty, QuestionType } from '../types/api';
 
 type FilterState = {
   difficulty: Difficulty | null;  // null = все грейды
-  type: QuestionType | 'ALL';     // ALL = все типы, иначе один тип
+  type: QuestionType | null;      // null = все типы
   search: string;
 };
 
-// Страница направления с двумя рядами фильтров: грейд и тип вопроса, плюс поиск.
-// По умолчанию показываем только TECHNICAL — это то, зачем пользователь пришёл в первую очередь.
+// Страница направления с фильтрами по типу вопроса и грейду, плюс поиск.
+// Кнопки работают как toggle: клик по активной — сбрасывает фильтр.
+// По умолчанию активно "Технические" — это то, зачем пользователь пришёл в первую очередь.
 export function DirectionPage() {
   const { slug } = useParams<{ slug: string }>();
   const [filter, setFilter] = useState<FilterState>({
@@ -28,7 +29,7 @@ export function DirectionPage() {
     queryFn: () =>
       api.getDirectionQuestions(slug!, {
         ...(filter.difficulty && { difficulty: filter.difficulty }),
-        ...(filter.type !== 'ALL' && { type: filter.type }),
+        ...(filter.type && { type: filter.type }),
       }),
     enabled: !!slug,
   });
@@ -40,6 +41,12 @@ export function DirectionPage() {
     if (!s) return data.questions;
     return data.questions.filter((q) => q.text.toLowerCase().includes(s));
   }, [data, filter.search]);
+
+  // Toggle-хелперы: клик по активному сбрасывает, по неактивному — выбирает
+  const toggleType = (t: QuestionType) =>
+    setFilter((f) => ({ ...f, type: f.type === t ? null : t }));
+  const toggleDifficulty = (d: Difficulty) =>
+    setFilter((f) => ({ ...f, difficulty: f.difficulty === d ? null : d }));
 
   if (isLoading) {
     return <div className="py-24 text-center text-fg-secondary">Загрузка вопросов...</div>;
@@ -70,9 +77,9 @@ export function DirectionPage() {
         </p>
       </div>
 
-      {/* Два ряда фильтров */}
+      {/* Фильтры — без кнопок "Все". Клик по активной сбрасывает фильтр */}
       <div className="space-y-2.5 mb-5">
-        {/* Ряд 1: тип вопроса */}
+        {/* Тип */}
         <div className="flex items-center gap-3 flex-wrap">
           <span className="text-xs text-fg-tertiary font-semibold uppercase tracking-wider w-14">
             Тип
@@ -81,46 +88,36 @@ export function DirectionPage() {
             <FilterPill
               label="Технические"
               active={filter.type === 'TECHNICAL'}
-              onClick={() => setFilter((f) => ({ ...f, type: 'TECHNICAL' }))}
+              onClick={() => toggleType('TECHNICAL')}
             />
             <FilterPill
               label="Поведенческие"
               active={filter.type === 'BEHAVIORAL'}
-              onClick={() => setFilter((f) => ({ ...f, type: 'BEHAVIORAL' }))}
-            />
-            <FilterPill
-              label="Все"
-              active={filter.type === 'ALL'}
-              onClick={() => setFilter((f) => ({ ...f, type: 'ALL' }))}
+              onClick={() => toggleType('BEHAVIORAL')}
             />
           </div>
         </div>
 
-        {/* Ряд 2: грейд */}
+        {/* Грейд */}
         <div className="flex items-center gap-3 flex-wrap">
           <span className="text-xs text-fg-tertiary font-semibold uppercase tracking-wider w-14">
             Грейд
           </span>
           <div className="flex gap-1.5">
             <FilterPill
-              label="Все"
-              active={filter.difficulty === null}
-              onClick={() => setFilter((f) => ({ ...f, difficulty: null }))}
-            />
-            <FilterPill
               label="Junior"
               active={filter.difficulty === 'JUNIOR'}
-              onClick={() => setFilter((f) => ({ ...f, difficulty: 'JUNIOR' }))}
+              onClick={() => toggleDifficulty('JUNIOR')}
             />
             <FilterPill
               label="Middle"
               active={filter.difficulty === 'MIDDLE'}
-              onClick={() => setFilter((f) => ({ ...f, difficulty: 'MIDDLE' }))}
+              onClick={() => toggleDifficulty('MIDDLE')}
             />
             <FilterPill
               label="Senior"
               active={filter.difficulty === 'SENIOR'}
-              onClick={() => setFilter((f) => ({ ...f, difficulty: 'SENIOR' }))}
+              onClick={() => toggleDifficulty('SENIOR')}
             />
           </div>
         </div>
