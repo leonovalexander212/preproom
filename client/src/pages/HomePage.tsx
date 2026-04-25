@@ -3,9 +3,8 @@ import { api } from '../lib/api';
 import { DirectionCard } from '../components/DirectionCard';
 import type { Direction } from '../types/api';
 
-// Главная страница сайта. Показывает список направлений, сгруппированный по категориям.
+// Главная страница. Hero + сетка направлений по категориям.
 export function HomePage() {
-  // useQuery сам вызовет api.getDirections при монтировании и закеширует результат.
   const { data: directions, isLoading, error } = useQuery({
     queryKey: ['directions'],
     queryFn: api.getDirections,
@@ -40,33 +39,52 @@ export function HomePage() {
   const totalInterviews = directions.reduce((sum, d) => sum + d._count.interviews, 0);
   const activeDirections = directions.filter(d => d._count.questions > 0).length;
 
+  // Общий счётчик для stagger-анимаций (через все категории)
+  let cardIndex = 0;
+
   return (
     <>
       {/* HERO */}
-      <section className="text-center pt-10 pb-12">
-        <div className="inline-block text-xs text-accent-400 bg-accent-500/10 px-3 py-1 rounded-full mb-5 tracking-wide font-medium">
-          БЕТА · апрель 2026
+      <section className="text-center pt-12 pb-14">
+        <div
+          className="inline-block text-[11px] text-accent-300 glass-subtle px-3 py-1 rounded-full mb-6 tracking-wide font-semibold animate-fade-in"
+          style={{ animationDelay: '0ms' }}
+        >
+          БЕТА · АПРЕЛЬ 2026
         </div>
-        <h1 className="text-4xl md:text-5xl font-bold text-fg-primary mb-5 leading-[1.1] tracking-tight">
-          Подготовка к техническим<br />собеседованиям по статистике
+        <h1
+          className="text-4xl md:text-5xl font-bold text-fg-primary mb-5 leading-[1.1] tracking-tight animate-fade-in"
+          style={{ animationDelay: '80ms' }}
+        >
+          Подготовка к техническим<br />
+          <span className="text-gradient">собеседованиям по статистике</span>
         </h1>
-        <p className="text-fg-secondary max-w-xl mx-auto leading-relaxed text-[15px]">
+        <p
+          className="text-fg-secondary max-w-xl mx-auto leading-relaxed text-[15px] animate-fade-in"
+          style={{ animationDelay: '160ms' }}
+        >
           Вопросы ранжированы по частоте встречаемости в реальных интервью.
           Сначала изучайте то, что спрашивают чаще всего.
         </p>
 
-        {/* Статистика */}
-        <div className="flex items-center justify-center gap-6 mt-9 text-sm text-fg-secondary">
-          <div>
-            <span className="text-fg-primary font-semibold">{totalQuestions}</span>{' '}вопросов
+        {/* Статистика в glass-пилле */}
+        <div
+          className="inline-flex items-center gap-6 mt-9 px-6 py-3 rounded-full glass animate-fade-in"
+          style={{ animationDelay: '240ms' }}
+        >
+          <div className="text-sm">
+            <span className="text-fg-primary font-bold text-[15px]">{totalQuestions}</span>
+            <span className="text-fg-secondary ml-1.5">вопросов</span>
           </div>
-          <div className="w-1 h-1 rounded-full bg-fg-tertiary" />
-          <div>
-            <span className="text-fg-primary font-semibold">{totalInterviews}</span>{' '}интервью
+          <div className="w-px h-4 bg-white/10" />
+          <div className="text-sm">
+            <span className="text-fg-primary font-bold text-[15px]">{totalInterviews}</span>
+            <span className="text-fg-secondary ml-1.5">интервью</span>
           </div>
-          <div className="w-1 h-1 rounded-full bg-fg-tertiary" />
-          <div>
-            <span className="text-fg-primary font-semibold">{activeDirections}</span>{' '}направлений
+          <div className="w-px h-4 bg-white/10" />
+          <div className="text-sm">
+            <span className="text-fg-primary font-bold text-[15px]">{activeDirections}</span>
+            <span className="text-fg-secondary ml-1.5">направлений</span>
           </div>
         </div>
       </section>
@@ -80,7 +98,7 @@ export function HomePage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {items.map((d) => (
-                <DirectionCard key={d.id} direction={d} />
+                <DirectionCard key={d.id} direction={d} index={cardIndex++} />
               ))}
             </div>
           </section>

@@ -130,9 +130,9 @@ export function DirectionPage() {
             placeholder="Поиск по вопросу..."
             value={filter.search}
             onChange={(e) => setFilter((f) => ({ ...f, search: e.target.value }))}
-            className="w-full bg-bg-surface border border-bg-border rounded-lg
+            className="w-full glass-subtle rounded-lg
                        pl-9 pr-3 py-2 text-[13px] text-fg-primary placeholder:text-fg-tertiary
-                       focus:outline-none focus:border-accent-500/50 transition-colors"
+                       focus:outline-none focus:bg-white/[0.06] focus:border-accent-400/30 transition-colors"
           />
         </div>
       </div>
@@ -169,10 +169,10 @@ function FilterPill({
     <button
       onClick={onClick}
       className={`
-        px-3 py-1.5 rounded-full text-xs font-semibold transition-colors border
+        px-3 py-1.5 rounded-full text-xs font-semibold transition-all
         ${active
-          ? 'bg-accent-500 border-accent-500 text-accent-50'
-          : 'bg-transparent border-bg-border text-fg-secondary hover:text-fg-primary hover:border-fg-tertiary'}
+          ? 'bg-gradient-to-r from-accent-500 to-accent-600 text-accent-50 ring-1 ring-accent-400/40 shadow-[0_4px_20px_-8px_rgba(109,102,237,0.6)]'
+          : 'glass-subtle text-fg-secondary hover:text-fg-primary hover:bg-white/[0.06]'}
       `}
     >
       {label}

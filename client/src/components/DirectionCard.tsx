@@ -1,21 +1,27 @@
 ﻿import { Link } from 'react-router-dom';
 import { Flame } from 'lucide-react';
 import type { Direction } from '../types/api';
+import { useReveal } from '../hooks/useReveal';
 
-type Props = { direction: Direction };
+type Props = { direction: Direction; index?: number };
 
-// Карточка направления на главной. Если направление ещё без данных — показывается тускло и некликабельно.
-// isFeatured → огонёк в углу (AI Engineer, Reverse Engineer).
-export function DirectionCard({ direction }: Props) {
+// Карточка направления на главной — glass-стиль с hover-lift.
+// index используется для stagger задержки при появлении.
+export function DirectionCard({ direction, index = 0 }: Props) {
+  const { ref, visible } = useReveal<HTMLDivElement>();
   const isEmpty = direction._count.questions === 0;
+
   const inner = (
     <div
+      ref={ref}
       className={`
-        relative rounded-xl p-4 border transition-all
+        reveal ${visible ? 'is-visible' : ''}
+        relative rounded-xl p-4
         ${isEmpty
-          ? 'bg-bg-surface/50 border-bg-border opacity-60 cursor-not-allowed'
-          : 'bg-bg-surface border-bg-border hover:border-accent-500/50 hover:bg-bg-elevated cursor-pointer'}
+          ? 'glass-subtle opacity-60 cursor-not-allowed'
+          : 'glass card-hover cursor-pointer'}
       `}
+      style={{ transitionDelay: visible ? `${Math.min(index * 40, 320)}ms` : '0ms' }}
     >
       {direction.isFeatured && (
         <div className="absolute top-3 right-3 text-orange-400" title="Новое направление">
@@ -26,7 +32,9 @@ export function DirectionCard({ direction }: Props) {
       <div className="flex items-start gap-3 mb-3">
         <div className={`
           w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 font-bold text-sm
-          ${isEmpty ? 'bg-bg-border text-fg-tertiary' : 'bg-accent-500/10 text-accent-400'}
+          ${isEmpty
+            ? 'bg-white/5 text-fg-tertiary'
+            : 'bg-gradient-to-br from-accent-500/25 to-accent-600/15 text-accent-300 ring-1 ring-accent-400/20'}
         `}>
           {direction.name.charAt(0)}
         </div>
@@ -34,7 +42,7 @@ export function DirectionCard({ direction }: Props) {
           <div className="flex items-center gap-2 mb-0.5">
             <div className="font-semibold text-fg-primary">{direction.name}</div>
             {isEmpty && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-bg-border text-fg-tertiary font-medium">
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/5 text-fg-tertiary font-medium border border-white/[0.06]">
                 скоро
               </span>
             )}
@@ -47,7 +55,7 @@ export function DirectionCard({ direction }: Props) {
         </div>
       </div>
 
-      <div className="flex gap-3 text-xs text-fg-tertiary pt-3 border-t border-bg-border">
+      <div className="flex gap-3 text-xs text-fg-tertiary pt-3 border-t border-white/[0.06]">
         <span>
           <span className={isEmpty ? 'text-fg-tertiary' : 'text-fg-primary font-semibold'}>
             {direction._count.questions || '—'}
