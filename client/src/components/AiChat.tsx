@@ -23,6 +23,8 @@ export function AiChat({ question, onClose }: Props) {
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Сохраняем последний запрос на случай ошибки — кнопка "Повторить" вызовет его снова
+  const lastRequestRef = useRef<{ text: string; questionId?: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const initRef = useRef(false);
@@ -46,6 +48,9 @@ export function AiChat({ question, onClose }: Props) {
   }, []);
 
   async function sendMessage(text: string, questionId?: string) {
+    // Запоминаем запрос для возможного повтора
+    lastRequestRef.current = { text, questionId };
+
     const newUserMsg: ChatMessage = { role: 'user', content: text };
     const newAssistantMsg: ChatMessage = { role: 'assistant', content: '' };
 
@@ -118,11 +123,15 @@ export function AiChat({ question, onClose }: Props) {
     } catch (err: any) {
       if (err.name === 'AbortError') return;
       setError(err.message || 'Ошибка соединения');
-      // Удаляем пустое сообщение ассистента, чтобы не висел "пустой пузырёк"
+      // Удаляем и пустое сообщение assistant, и то сообщение user, которое не дошло —
+      // иначе в истории окажутся два user подряд, и следующий запрос LLM откажёт (400)
       setMessages((prev) => {
-        const last = prev[prev.length - 1];
-        if (last?.role === 'assistant' && !last.content) return prev.slice(0, -1);
-        return prev;
+        const next = [...prev];
+        const last = next[next.length - 1];
+        if (last?.role === 'assistant' && !last.content) next.pop();
+        const newLast = next[next.length - 1];
+        if (newLast?.role === 'user') next.pop();
+        return next;
       });
     } finally {
       setStreaming(false);
@@ -180,8 +189,20 @@ export function AiChat({ question, onClose }: Props) {
           </div>
         ))}
         {error && (
-          <div className="rounded-lg p-3 text-[12px] text-grade-senior border border-grade-senior/30 bg-grade-senior/5">
-            {error}
+          <div className="rounded-lg p-3 text-[12px] text-grade-senior border border-grade-senior/30 bg-grade-senior/5 flex items-center justify-between gap-3">
+            <span>{error}</span>
+            {lastRequestRef.current && (
+              <button
+                onClick={() => {
+                  const last = lastRequestRef.current!;
+                  setError(null);
+                  sendMessage(last.text, last.questionId);
+                }}
+                className="text-[12px] font-semibold text-fg-primary hover:text-accent-300 px-2 py-1 rounded border border-white/[0.1] hover:border-accent-400/30 flex-shrink-0"
+              >
+                Повторить
+              </button>
+            )}
           </div>
         )}
         <div ref={messagesEndRef} />
