@@ -34,13 +34,6 @@
     transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
-  /* Клик-отжимание — в момент нажатия кнопка проседает.
-     Очень тонко — на 1.5%, но ощущается отзывчивым. */
-  button:active:not(:disabled),
-  [role='button']:active {
-    transform: scale(0.985);
-  }
-
   /* Кастомный скроллбар под темную тему */
   ::-webkit-scrollbar {
     width: 10px;

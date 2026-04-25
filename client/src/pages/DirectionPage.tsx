@@ -142,13 +142,24 @@ export function DirectionPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="py-16 text-center text-fg-secondary">
+        <div className="py-16 text-center text-fg-secondary animate-page-enter">
           По выбранным фильтрам ничего не найдено
         </div>
       ) : (
-        <div className="space-y-2">
-          {filtered.map((q) => (
-            <QuestionCard key={q.id} question={q} />
+        // Ключ включает все фильтры: при смене грейда/типа React пересобирает контейнер
+        // — и все карточки внутри заново запускают анимацию появления.
+        <div
+          key={`${filter.type ?? 'all'}-${filter.difficulty ?? 'all'}`}
+          className="space-y-2"
+        >
+          {filtered.map((q, i) => (
+            <div
+              key={q.id}
+              className="animate-fade-in"
+              style={{ animationDelay: `${Math.min(i * 15, 200)}ms` }}
+            >
+              <QuestionCard question={q} />
+            </div>
           ))}
         </div>
       )}
