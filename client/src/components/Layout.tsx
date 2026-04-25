@@ -1,8 +1,19 @@
-﻿import { Outlet, Link } from 'react-router-dom';
+﻿import { useEffect } from 'react';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 
 // Общий макет страниц: фиксированные ambient-пятна в фоне,
 // над ними — стеклянный хедер и содержимое.
 export function Layout() {
+  // При смене роута pathname меняется — это ключ для main, который заставляет
+  // React пересобрать DOM-узел и запустить CSS-анимацию входа.
+  const location = useLocation();
+
+  // При любой смене роута прокручиваемся наверх — иначе новая страница
+  // открывается на той же высоте, на которой был скролл на предыдущей.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+  }, [location.pathname]);
+
   return (
     <div className="relative min-h-screen flex flex-col">
       {/* Ambient-свечения в фоне. fixed — чтобы они оставались при скролле */}
@@ -57,7 +68,10 @@ export function Layout() {
         </div>
       </header>
 
-      <main className="relative z-10 flex-1 max-w-6xl w-full mx-auto px-6 py-8">
+      <main
+        key={location.pathname}
+        className="relative z-10 flex-1 max-w-6xl w-full mx-auto px-6 py-8 animate-page-enter"
+      >
         <Outlet />
       </main>
 
