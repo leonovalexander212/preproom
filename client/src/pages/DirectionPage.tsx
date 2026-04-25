@@ -4,8 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, Search } from 'lucide-react';
 import { api } from '../lib/api';
 import { QuestionCard } from '../components/QuestionCard';
-import { AiChatModal } from '../components/AiChatModal';
-import type { Difficulty, QuestionType, Question } from '../types/api';
+import type { Difficulty, QuestionType } from '../types/api';
 
 type FilterState = {
   difficulty: Difficulty | null;  // null = все грейды
@@ -23,9 +22,6 @@ export function DirectionPage() {
     type: 'TECHNICAL',
     search: '',
   });
-
-  // Активный вопрос для ИИ-сайдбара. null — сайдбар закрыт.
-  const [aiQuestion, setAiQuestion] = useState<Question | null>(null);
 
   // queryKey включает и difficulty и type — при их смене будет новый запрос с пересчитанными процентами
   const { data, isLoading, error } = useQuery({
@@ -162,14 +158,11 @@ export function DirectionPage() {
               className="animate-fade-in"
               style={{ animationDelay: `${Math.min(i * 15, 200)}ms` }}
             >
-              <QuestionCard question={q} onAskAi={setAiQuestion} />
+              <QuestionCard question={q} />
             </div>
           ))}
         </div>
       )}
-
-      {/* Модалка ИИ — открывается когда aiQuestion не null */}
-      <AiChatModal question={aiQuestion} onClose={() => setAiQuestion(null)} />
     </>
   );
 }
