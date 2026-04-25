@@ -3,14 +3,14 @@ import { ChevronDown, Sparkles } from 'lucide-react';
 import { DifficultyBadge } from './DifficultyBadge';
 import type { Question } from '../types/api';
 
-type Props = { question: Question };
+type Props = { question: Question; onAskAi?: (question: Question) => void };
 
 // Карточка одного вопроса. Слева — крупный процент вероятности, справа — текст вопроса,
 // грейд и опционально топик. При клике раскрывается с эталонным ответом и кнопкой "уточнить у ИИ".
 //
 // memo() оборачивает компонент и заставляет React перерендерить его только при изменении props.
 // Без этого: при клике на любую карточку React пересобирает все 737 карточек — отсюда лаги.
-export const QuestionCard = memo(function QuestionCard({ question }: Props) {
+export const QuestionCard = memo(function QuestionCard({ question, onAskAi }: Props) {
   const [open, setOpen] = useState(false);
   const pct = Math.round(question.probability * 100);
   const hasAnswer = question.answer.trim().length > 0;
@@ -67,10 +67,11 @@ export const QuestionCard = memo(function QuestionCard({ question }: Props) {
 
           <div className="flex items-center gap-2 mt-3 flex-wrap">
             <button
+              onClick={() => onAskAi?.(question)}
               className="inline-flex items-center gap-1.5 text-xs font-semibold
                          bg-gradient-to-r from-accent-500/20 to-accent-600/15 text-accent-300 hover:text-accent-200
                          hover:from-accent-500/30 hover:to-accent-600/25
-                         border border-accent-400/25 px-3 py-1.5 rounded-lg transition-all"
+                         border border-accent-400/25 px-3 py-1.5 rounded-lg"
             >
               <Sparkles size={14} />
               Уточнить у ИИ

@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import directionsRouter from './routes/directions';
+import aiRouter from './routes/ai';
 
 dotenv.config();
 
@@ -16,6 +17,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/directions', directionsRouter);
+app.use('/api/ai', aiRouter);
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('=== UNHANDLED ERROR ===');
