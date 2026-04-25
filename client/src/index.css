@@ -17,6 +17,30 @@
     @apply bg-bg-base text-fg-primary min-h-screen;
   }
 
+  /* === Глобальные плавные переходы для всех интерактивных элементов ===
+     Любая кнопка, ссылка или инпут автоматически получает плавный переход
+     по фону, рамке, тексту, transform и opacity — не нужно ручно добавлять
+     transition-colors каждый раз. Кривая Apple-стиля одинакова по всему сайту. */
+  button,
+  a,
+  input,
+  textarea,
+  select,
+  [role='button'] {
+    transition-property: background-color, background-image, border-color, color,
+                        fill, stroke, opacity, box-shadow, transform, filter,
+                        -webkit-backdrop-filter, backdrop-filter;
+    transition-duration: 250ms;
+    transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  /* Клик-отжимание — в момент нажатия кнопка проседает.
+     Очень тонко — на 1.5%, но ощущается отзывчивым. */
+  button:active:not(:disabled),
+  [role='button']:active {
+    transform: scale(0.985);
+  }
+
   /* Кастомный скроллбар под темную тему */
   ::-webkit-scrollbar {
     width: 10px;
