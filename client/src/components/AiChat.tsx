@@ -54,11 +54,11 @@ export function AiChat({ question, onClose }: Props) {
     const newUserMsg: ChatMessage = { role: 'user', content: text };
     const newAssistantMsg: ChatMessage = { role: 'assistant', content: '' };
 
-    let fullHistory: ChatMessage[] = [];
-    setMessages((prev) => {
-      fullHistory = [...prev, newUserMsg];
-      return [...fullHistory, newAssistantMsg];
-    });
+    // Собираем историю из текущего стейта СНАЧАЛА, потом обновляем.
+    // Раньше был хак с присваиванием в callback setMessages — это ломается в React Strict Mode,
+    // где callback может вызваться дважды, и fullHistory оказывается пустым.
+    const fullHistory: ChatMessage[] = [...messages, newUserMsg];
+    setMessages([...fullHistory, newAssistantMsg]);
 
     setStreaming(true);
     setError(null);
