@@ -34,12 +34,17 @@ export function DirectionPage() {
     enabled: !!slug,
   });
 
+  // Нормализация для поиска: нижний регистр + ё → е.
+  // Решает проблему "Чем/Чём", "все/всё", "ёлка/елка" — люди
+  // редко печатают ё на клавиатуре.
+  const normalize = (s: string) => s.toLowerCase().replace(/ё/g, 'е');
+
   // Поиск остаётся клиентским — быстро и не бомбит сервер
   const filtered = useMemo(() => {
     if (!data) return [];
-    const s = filter.search.trim().toLowerCase();
+    const s = normalize(filter.search.trim());
     if (!s) return data.questions;
-    return data.questions.filter((q) => q.text.toLowerCase().includes(s));
+    return data.questions.filter((q) => normalize(q.text).includes(s));
   }, [data, filter.search]);
 
   // Toggle-хелперы: клик по активному сбрасывает, по неактивному — выбирает
