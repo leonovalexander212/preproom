@@ -16,11 +16,11 @@ async function main() {
 
   await seedDirections(prisma);
 
-  await seedInterviewFile(prisma, path.join('data', 'python.txt'), 'python');
-
-  // В будущем просто добавляешь строки:
-  // await seedInterviewFile(prisma, path.join('data', 'java.txt'),   'java');
-  // await seedInterviewFile(prisma, path.join('data', 'csharp.txt'), 'csharp');
+  await seedInterviewFile(prisma, path.join('..', 'направления', 'java',     'junior.txt'), 'java',     'JUNIOR');
+  await seedInterviewFile(prisma, path.join('..', 'направления', 'python',   'junior.txt'), 'python',   'JUNIOR');
+  await seedInterviewFile(prisma, path.join('..', 'направления', 'php',      'junior.txt'), 'php',      'JUNIOR');
+  await seedInterviewFile(prisma, path.join('..', 'направления', 'qa',       'junior.txt'), 'qa',       'JUNIOR');
+  await seedInterviewFile(prisma, path.join('..', 'направления', 'frontend', 'junior.txt'), 'frontend', 'JUNIOR');
 
   console.log('\n🎉 Сидинг завершён');
 }
