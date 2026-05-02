@@ -2,16 +2,15 @@ import 'dotenv/config';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { prisma } from '../src/lib/prisma';
-import { openrouter } from '../src/lib/openrouter';
+import { llm } from '../src/lib/llm';
 import { pipeline, type FeatureExtractionPipeline } from '@xenova/transformers';
 
 // Настройки
 const DIRECTION_SLUG = process.argv[2] ?? 'python';
 const SKIP_LLM = process.argv.includes('--skip-llm');
-const SIMILARITY_THRESHOLD = 0.92;
+const SIMILARITY_THRESHOLD = 0.88;          // greedy complete-linkage
 const EMBEDDING_MODEL = 'Xenova/multilingual-e5-small';
-const CONFIRM_MODEL = 'meta-llama/llama-3.3-70b-instruct:free';
-const LLM_DELAY_MS = 8000;           // 8 сек между запросами = ~7 req/min (под лимит 8/min)
+const LLM_DELAY_MS = 250;                    // Groq спокойно держит 30 req/min
 const LLM_MAX_RETRIES = 3;
 
 type Difficulty = 'JUNIOR' | 'MIDDLE' | 'SENIOR';
@@ -78,39 +77,38 @@ async function getEmbeddings(texts: string[]): Promise<number[][]> {
 
 // ==================== CLUSTERING ====================
 
+/**
+ * Greedy кластеризация с complete-linkage:
+ * новый элемент попадает в кластер только если его сходство с КАЖДЫМ
+ * уже находящимся там элементом >= порога. Это не даёт цепочкам
+ * "близких пар" сливать половину базы в один гигантский кластер.
+ */
 function cluster(questions: QuestionRow[], embeddings: number[][]): QuestionRow[][] {
   const n = questions.length;
-  const parent = Array.from({ length: n }, (_, i) => i);
-
-  const find = (x: number): number => {
-    while (parent[x] !== x) {
-      parent[x] = parent[parent[x]];
-      x = parent[x];
-    }
-    return x;
-  };
-
-  const union = (a: number, b: number) => {
-    const ra = find(a), rb = find(b);
-    if (ra !== rb) parent[ra] = rb;
-  };
+  const clusters: number[][] = [];
 
   for (let i = 0; i < n; i++) {
-    for (let j = i + 1; j < n; j++) {
-      if (cosineSimilarity(embeddings[i], embeddings[j]) >= SIMILARITY_THRESHOLD) {
-        union(i, j);
+    let bestCluster = -1;
+    let bestMinSim = -1;
+    for (let c = 0; c < clusters.length; c++) {
+      let minSim = 1;
+      for (const j of clusters[c]) {
+        const s = cosineSimilarity(embeddings[i], embeddings[j]);
+        if (s < minSim) minSim = s;
+        if (minSim < SIMILARITY_THRESHOLD) break;
+      }
+      if (minSim >= SIMILARITY_THRESHOLD && minSim > bestMinSim) {
+        bestMinSim = minSim;
+        bestCluster = c;
       }
     }
+    if (bestCluster >= 0) clusters[bestCluster].push(i);
+    else clusters.push([i]);
   }
 
-  const groups = new Map<number, QuestionRow[]>();
-  for (let i = 0; i < n; i++) {
-    const root = find(i);
-    if (!groups.has(root)) groups.set(root, []);
-    groups.get(root)!.push(questions[i]);
-  }
-
-  return Array.from(groups.values()).filter((g) => g.length > 1);
+  return clusters
+    .filter((g) => g.length > 1)
+    .map((idxs) => idxs.map((i) => questions[i]));
 }
 
 // ==================== LLM CONFIRMATION (с ретраями) ====================
@@ -136,8 +134,8 @@ ${list}
 
   for (let attempt = 1; attempt <= LLM_MAX_RETRIES; attempt++) {
     try {
-      const response = await openrouter.chat.completions.create({
-        model: CONFIRM_MODEL,
+      const response = await llm.client.chat.completions.create({
+        model: llm.model,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.1,
       });
