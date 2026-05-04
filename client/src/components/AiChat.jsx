@@ -8,17 +8,6 @@ export default function AiChat({ questionId, questionText, onClose }) {
   const sentInitial = useRef(false);
   const scroller = useRef(null);
 
-  // 🔒 скрываем navbar физически
-  useEffect(() => {
-    const nav = document.querySelector('header[data-testid="nav-bar"]');
-    if (nav) nav.style.display = "none";
-
-    return () => {
-      if (nav) nav.style.display = "";
-    };
-  }, []);
-
-  // ESC закрывает чат
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") onClose();
@@ -27,15 +16,32 @@ export default function AiChat({ questionId, questionText, onClose }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  // блокируем скролл страницы + Lenis
+  // Запираем скролл + скрываем NavBar
   useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const html = document.documentElement;
+    const body = document.body;
+    const nav = document.querySelector('header[data-testid="nav-bar"]');
+
+    const scrollbarWidth = window.innerWidth - html.clientWidth;
+    const prev = {
+      htmlOverflow: html.style.overflow,
+      bodyOverflow: body.style.overflow,
+      bodyPadRight: body.style.paddingRight,
+      navVisibility: nav ? nav.style.visibility : "",
+    };
+
+    html.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    if (scrollbarWidth > 0) body.style.paddingRight = `${scrollbarWidth}px`;
+    if (nav) nav.style.visibility = "hidden";
 
     if (window.__lenis) window.__lenis.stop();
 
     return () => {
-      document.body.style.overflow = prev;
+      html.style.overflow = prev.htmlOverflow;
+      body.style.overflow = prev.bodyOverflow;
+      body.style.paddingRight = prev.bodyPadRight;
+      if (nav) nav.style.visibility = prev.navVisibility;
       if (window.__lenis) window.__lenis.start();
     };
   }, []);
@@ -143,14 +149,12 @@ export default function AiChat({ questionId, questionText, onClose }) {
           borderLeft: "2px solid var(--fg)",
           display: "flex",
           flexDirection: "column",
+          overflow: "hidden",
         }}
       >
-        {/* HEADER (sticky) */}
         <div
           style={{
-            position: "sticky",
-            top: 0,
-            zIndex: 2,
+            flex: "0 0 auto",
             padding: "18px 20px",
             background: "var(--accent)",
             color: "#000",
@@ -190,9 +194,9 @@ export default function AiChat({ questionId, questionText, onClose }) {
           </button>
         </div>
 
-        {/* QUESTION */}
         <div
           style={{
+            flex: "0 0 auto",
             padding: "16px 22px",
             borderBottom: "2px solid var(--line)",
             color: "var(--fg-dim)",
@@ -212,13 +216,16 @@ export default function AiChat({ questionId, questionText, onClose }) {
           <div style={{ marginTop: 6 }}>{questionText}</div>
         </div>
 
-        {/* MESSAGES */}
+        {/* ===== ЗАМЕНЁННЫЙ БЛОК СООБЩЕНИЙ ===== */}
         <div
           ref={scroller}
-          onWheel={(e) => e.stopPropagation()}
+          data-lenis-prevent
           style={{
             flex: 1,
+            minHeight: 0,
             overflowY: "auto",
+            overscrollBehavior: "contain",
+            WebkitOverflowScrolling: "touch",
             padding: "20px 22px",
             display: "flex",
             flexDirection: "column",
@@ -245,9 +252,9 @@ export default function AiChat({ questionId, questionText, onClose }) {
             ))}
         </div>
 
-        {/* FOOTER */}
         <div
           style={{
+            flex: "0 0 auto",
             borderTop: "2px solid var(--fg)",
             padding: 14,
             background: "var(--bg)",

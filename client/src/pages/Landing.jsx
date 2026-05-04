@@ -81,7 +81,7 @@ export default function Landing() {
   const statItems = [
     { v: fmt(stats.questions),  l: "ВОПРОСОВ" },
     { v: fmt(stats.interviews), l: "СОБЕСЕДОВАНИЙ" },
-    { v: fmt(stats.directions), l: "НАПРАВЛЕНИЙ" },
+    { v: fmt(stats.directions), l: "НАПРАВЛЕНИЯ" },
   ];
 
   return (
@@ -118,7 +118,7 @@ export default function Landing() {
           </p>
           <div className="hero-meta" style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
             <Link to="/directions" ref={ctaRef} className="btn-brutal" data-testid="hero-cta-start">
-              НАЧАТЬ СОБЕС ↗
+              НАЧАТЬ ПОДГОТОВКУ ↗
             </Link>
           </div>
         </div>
