@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import DomainIcon from "../components/DomainIcon.jsx";
+import { api } from "../lib/api.js";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -10,9 +11,9 @@ const DOMAINS = [
   { id: "python",   name: "PYTHON",   no: "01", desc: "Backend, data science, автоматизация." },
   { id: "frontend", name: "FRONTEND", no: "02", desc: "React, TypeScript, интерфейсы." },
   { id: "java",     name: "JAVA",     no: "03", desc: "Enterprise разработка, Spring." },
-  { id: "csharp",   name: "C# / .NET",no: "04", desc: "Корпоративные приложения, игры." },
-  { id: "cpp",      name: "C++",      no: "05", desc: "Системное программирование, игры." },
-  { id: "go",       name: "GO",       no: "06", desc: "Высоконагруженные сервисы, микросервисы." },
+  { id: "php",      name: "PHP",      no: "04", desc: "Веб-бэкенд, Laravel, Symfony." },
+  { id: "qa",       name: "QA",       no: "05", desc: "Тестирование, автоматизация, качество." },
+  { id: "more",     name: "ЕЩЁ",      no: "06", desc: "Все доступные направления платформы.", muted: true },
 ];
 
 const FEATURES = [
@@ -25,6 +26,15 @@ export default function Landing() {
   const heroRef = useRef(null);
   const titleRef = useRef(null);
   const ctaRef = useRef(null);
+  const [stats, setStats] = useState({ questions: 0, interviews: 0, directions: 0 });
+
+  useEffect(() => {
+    api.getDirections().then((dirs) => {
+      const questions   = dirs.reduce((s, d) => s + (d._count?.questions   || 0), 0);
+      const interviews  = dirs.reduce((s, d) => s + (d._count?.interviews  || 0), 0);
+      setStats({ questions, interviews, directions: dirs.length });
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -66,13 +76,20 @@ export default function Landing() {
     };
   }, []);
 
+  const fmt = (n) => n.toLocaleString("ru-RU").replace(/,/g, " ");
+
+  const statItems = [
+    { v: fmt(stats.questions),  l: "ВОПРОСОВ" },
+    { v: fmt(stats.interviews), l: "СОБЕСЕДОВАНИЙ" },
+    { v: fmt(stats.directions), l: "НАПРАВЛЕНИЙ" },
+  ];
+
   return (
     <div ref={heroRef} style={{ position: "relative", zIndex: 2 }}>
       <section style={{ padding: "180px 28px 60px", maxWidth: 1280, margin: "0 auto", position: "relative" }}>
         <div className="hero-meta mono" style={{
           fontSize: 11, color: "var(--accent)", letterSpacing: "0.24em",
-          marginBottom: 24,
-          display: "inline-flex", alignItems: "center", gap: 12,
+          marginBottom: 24, display: "inline-flex", alignItems: "center", gap: 12,
           border: "1px solid var(--line)", padding: "6px 12px",
         }}>
           <span style={{ width: 8, height: 8, background: "var(--accent)", display: "inline-block" }} />
@@ -96,29 +113,23 @@ export default function Landing() {
         <div style={{ marginTop: 40, display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 40, alignItems: "end" }}>
           <p className="hero-meta" style={{ fontSize: 16, color: "var(--fg-dim)", lineHeight: 1.55, maxWidth: 540, margin: 0 }}>
             <span style={{ color: "var(--accent)" }}>›</span>{" "}
-            Платформа для подготовки к самым требовательным инженерным интервью —
+            Платформа для подготовки к самым требовательным инженерным собеседованиям —
             реальное программирование, системный дизайн и алгоритмы. Никаких компромиссов.
           </p>
           <div className="hero-meta" style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-            <Link to="/questions" ref={ctaRef} className="btn-brutal" data-testid="hero-cta-start">
-              НАЧАТЬ ИНТЕРВЬЮ ↗
+            <Link to="/directions" ref={ctaRef} className="btn-brutal" data-testid="hero-cta-start">
+              НАЧАТЬ СОБЕС ↗
             </Link>
           </div>
         </div>
 
         <div className="hero-meta" style={{
-          marginTop: 80,
-          border: "2px solid var(--fg)",
-          display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
-          background: "var(--card)",
+          marginTop: 80, border: "2px solid var(--fg)",
+          display: "grid", gridTemplateColumns: "repeat(3, 1fr)", background: "var(--card)",
         }}>
-          {[
-            { v: "10 248", l: "ВОПРОСОВ" },
-            { v: "1 048",  l: "ИНТЕРВЬЮ" },
-            { v: "47",     l: "ТЕХНОЛОГИЙ" },
-          ].map((s, i, arr) => (
+          {statItems.map((s, i, arr) => (
             <div key={s.l} style={{ padding: "26px 22px", borderRight: i < arr.length - 1 ? "2px solid var(--fg)" : "none" }}>
-              <div className="display" style={{ fontSize: 38, color: "var(--fg)" }}>{s.v}</div>
+              <div className="display" style={{ fontSize: 38, color: "var(--fg)" }} data-testid={`stat-${s.l}`}>{s.v}</div>
               <div className="mono" style={{ fontSize: 10, color: "var(--muted)", letterSpacing: "0.2em", marginTop: 6 }}>
                 {s.l}
               </div>
@@ -144,49 +155,38 @@ export default function Landing() {
         </div>
 
         <div className="domain-grid" style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 0,
-          border: "2px solid var(--fg)",
+          display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0, border: "2px solid var(--fg)",
         }}>
           {DOMAINS.map((d, idx) => (
             <Link
               key={d.id}
-              to={d.id === "more" ? "#" : "/questions"}
+              to={d.id === "more" ? "/directions" : `/d/${d.id}`}
               data-testid={`domain-${d.id}`}
               className="domain-card"
               style={{
-                position: "relative",
-                padding: "36px 28px 28px",
+                position: "relative", padding: "36px 28px 28px",
                 borderRight: (idx % 3 !== 2) ? "2px solid var(--fg)" : "none",
                 borderBottom: idx < 3 ? "2px solid var(--fg)" : "none",
                 background: d.muted ? "var(--card-muted)" : "var(--card)",
-                color: "var(--fg)",
-                minHeight: 240,
+                color: "var(--fg)", minHeight: 240,
                 display: "flex", flexDirection: "column", justifyContent: "space-between",
-                overflow: "hidden",
-                transition: "background 180ms ease, color 180ms ease",
+                overflow: "hidden", transition: "background 180ms ease, color 180ms ease",
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "#e5ff00";
-                e.currentTarget.style.color = "#000";
-              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "#e5ff00"; e.currentTarget.style.color = "#000"; }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = d.muted ? "var(--card-muted)" : "var(--card)";
                 e.currentTarget.style.color = "var(--fg)";
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
-                <div className="mono" style={{ fontSize: 11, letterSpacing: "0.2em", opacity: 0.7 }}>
-                  N°{d.no}
-                </div>
+                <div className="mono" style={{ fontSize: 11, letterSpacing: "0.2em", opacity: 0.7 }}>N°{d.no}</div>
                 <div className="mono" style={{ fontSize: 10, letterSpacing: "0.2em", opacity: 0.55 }}>
-                  {d.muted ? "WIP" : "OPEN ↗"}
+                  {d.muted ? "ALL ↗" : "OPEN ↗"}
                 </div>
               </div>
 
               <div style={{ position: "absolute", bottom: 18, right: 18, opacity: 0.85, pointerEvents: "none" }}>
-                <DomainIcon id={d.id} />
+                <DomainIcon slug={d.id} />
               </div>
 
               <div>
@@ -225,7 +225,7 @@ export default function Landing() {
                 </li>
               ))}
             </ul>
-            <Link to="/questions" className="btn-ghost reveal-title" style={{ marginTop: 36 }} data-testid="sim-cta">
+            <Link to="/directions" className="btn-ghost reveal-title" style={{ marginTop: 36 }} data-testid="sim-cta">
               ПОПРОБОВАТЬ →
             </Link>
           </div>
@@ -248,6 +248,7 @@ export default function Landing() {
   );
 }
 
+// --- CodeBlock (без изменений) ---
 const SCENARIOS = [
   {
     file: "binary_search.py",
@@ -283,7 +284,6 @@ const SCENARIOS = [
     term: ["$ pytest two_sum.py -q", "....                    [100%]", "4 passed in 0.08s", "Память: 14.2 MB"],
   },
 ];
-
 const COLOR = { k: "#ff5b00", c: "#5e5e5e", fn: "#e5ff00", ty: "#fbbf24", nm: "#34d399", s: "#cfcfcf" };
 
 function CodeBlock() {
@@ -337,10 +337,8 @@ function CodeBlock() {
 
   return (
     <div className="code-block" style={{
-      border: "2px solid var(--fg)",
-      background: "#000",
-      fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 12.5,
+      border: "2px solid var(--fg)", background: "#000",
+      fontFamily: "'JetBrains Mono', monospace", fontSize: 12.5,
       boxShadow: "10px 10px 0 var(--accent)",
     }} data-testid="code-block">
       <div style={{

@@ -1,30 +1,82 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
-import { api } from "../lib/api.js";
+
+const TESTS = [
+  {
+    id: "direction",
+    title: "ПРОФОРИЕНТАЦИЯ",
+    tag: "10 ВОПРОСОВ · 2 МИН",
+    desc: "Шкала «Согласен ↔ Не согласен» в стиле 16personalities. Подберём 3 направления, с которых стоит начать.",
+    to: "/quiz-direction",
+    cta: "ПРОЙТИ ТЕСТ ↗",
+    accent: "#e5ff00",
+    status: "READY",
+  },
+  {
+    id: "skill",
+    title: "ТВОЙ ГРЕЙД",
+    tag: "СКОРО",
+    desc: "15 вопросов разной сложности — определим твой текущий уровень: Junior / Middle / Senior.",
+    to: null, cta: "В РАЗРАБОТКЕ", accent: "#34d399", status: "WIP",
+  },
+  {
+    id: "softskills",
+    title: "SOFT SKILLS",
+    tag: "СКОРО",
+    desc: "Мини-интервью про коммуникацию, конфликты и работу в команде. Оценка от ИИ.",
+    to: null, cta: "В РАЗРАБОТКЕ", accent: "#ff5b00", status: "WIP",
+  },
+];
 
 export default function Tests() {
-  const [dirs, setDirs] = useState([]);
-  useEffect(() => { api.getDirections().then(setDirs).catch(() => {}); }, []);
-
   return (
-    <div style={{ position: "relative", zIndex: 2, paddingTop: 120, maxWidth: 1280, margin: "0 auto", padding: "120px 28px 0" }}>
-      <div className="mono" style={{ fontSize: 11, color: "var(--accent-ink)", letterSpacing: "0.24em", marginBottom: 18 }}>› ТРЕНИРОВКА</div>
-      <h1 className="display" style={{ fontSize: "clamp(60px, 9vw, 140px)", margin: 0, color: "var(--fg)" }}>
-        <span className="glitch" data-text="КВИЗ">КВИЗ</span>
+    <div style={{ paddingTop: 120, maxWidth: 1180, margin: "0 auto", padding: "120px 28px 60px" }}>
+      <div className="mono" style={{ fontSize: 11, color: "var(--accent-ink)", letterSpacing: "0.24em", marginBottom: 18 }}>
+        › ХАБ ТЕСТОВ
+      </div>
+      <h1 className="display" style={{ fontSize: "clamp(56px, 9vw, 140px)", margin: 0, color: "var(--fg)" }}>
+        <span className="glitch" data-text="ТЕСТЫ">ТЕСТЫ</span>
       </h1>
-      <p style={{ marginTop: 20, fontSize: 14, color: "var(--fg-dim)", maxWidth: 540, lineHeight: 1.6 }}>
-        <span style={{ color: "var(--accent-ink)" }}>›</span> Выбери направление — сгенерируем 10 случайных вопросов с проверкой через ИИ.
+      <p style={{ marginTop: 20, fontSize: 14, color: "var(--fg-dim)", maxWidth: 560, lineHeight: 1.6 }}>
+        <span style={{ color: "var(--accent-ink)" }}>›</span> Проходи повторно столько раз, сколько нужно. Результаты не сохраняются на сервере — только подсказывают, куда копать.
       </p>
-      <div style={{ marginTop: 40, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 16 }}>
-        {dirs.map((d) => (
-          <Link key={d.id} to={`/tests/quiz?direction=${d.slug}`} className="card-brutal" data-testid={`quiz-direction-${d.slug}`}
-            style={{ padding: 22, color: "var(--fg)", display: "block" }}>
-            <div className="display" style={{ fontSize: 28 }}>{d.name}</div>
-            <div className="mono" style={{ marginTop: 10, fontSize: 11, color: "var(--accent-ink)", letterSpacing: "0.2em" }}>
-              {d._count.questions} ВОПР ↗
-            </div>
-          </Link>
-        ))}
+
+      <div style={{ marginTop: 40, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
+        {TESTS.map((t) => {
+          const available = Boolean(t.to);
+          const Wrap = available ? Link : "div";
+          const wrapProps = available ? { to: t.to, "data-testid": `test-${t.id}` } : { "data-testid": `test-${t.id}`, "aria-disabled": true };
+          return (
+            <Wrap {...wrapProps} key={t.id}
+              style={{
+                display: "block", padding: 24, color: "var(--fg)", textDecoration: "none",
+                background: "var(--card)", border: "2px solid var(--fg)",
+                boxShadow: available ? `6px 6px 0 ${t.accent}` : "4px 4px 0 var(--line)",
+                opacity: available ? 1 : 0.6, cursor: available ? "pointer" : "not-allowed",
+                position: "relative", overflow: "hidden",
+              }}>
+              <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: 4, background: t.accent }} />
+              <div className="mono" style={{ fontSize: 10, letterSpacing: "0.22em", color: t.accent }}>
+                {t.status === "READY" ? "● ДОСТУПЕН" : "○ В РАЗРАБОТКЕ"}
+              </div>
+              <div className="display" style={{ fontSize: 34, marginTop: 8, lineHeight: 0.95 }}>{t.title}</div>
+              <div className="mono" style={{ marginTop: 8, fontSize: 11, letterSpacing: "0.2em", color: "var(--muted)" }}>{t.tag}</div>
+              <p style={{ marginTop: 14, fontSize: 13, color: "var(--fg-dim)", lineHeight: 1.55 }}>{t.desc}</p>
+              <div style={{
+                marginTop: 18, display: "inline-block",
+                padding: "10px 16px", fontSize: 11, fontWeight: 700, letterSpacing: "0.2em",
+                background: available ? t.accent : "transparent",
+                color: available ? "#000" : "var(--muted)",
+                border: "2px solid " + (available ? "#000" : "var(--line)"),
+                boxShadow: available ? "4px 4px 0 #000" : "none",
+              }}>{t.cta}</div>
+            </Wrap>
+          );
+        })}
+      </div>
+
+      <div style={{ marginTop: 32, fontSize: 12, color: "var(--muted)" }} className="mono">
+        // СТАРЫЙ КВИЗ ПО СЛУЧАЙНЫМ ВОПРОСАМ УБРАН — ПЕРЕЕХАЛ В <Link to="/directions" style={{ color: "var(--accent-ink)" }}>НАПРАВЛЕНИЯ</Link> → КОНКРЕТНЫЙ СТЕК
       </div>
     </div>
   );

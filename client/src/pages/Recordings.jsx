@@ -5,17 +5,21 @@ export default function Recordings() {
   const [items, setItems] = useState([]);
   const [error, setError] = useState(null);
 
-  // --- NEW FILTER STATE ---
+  // --- FILTER STATE ---
   const [dir, setDir] = useState("");
   const [diff, setDiff] = useState("");
   const [dirs, setDirs] = useState([]);
+
+  // 🔥 пагинация
+  const PAGE_REC = 9;
+  const [visibleRec, setVisibleRec] = useState(PAGE_REC);
 
   // загрузка направлений
   useEffect(() => {
     api.getDirections().then(setDirs).catch(() => {});
   }, []);
 
-  // загрузка интервью с фильтрами
+  // загрузка интервью с фильтрами + сброс лимита
   useEffect(() => {
     api
       .getInterviews({
@@ -24,65 +28,58 @@ export default function Recordings() {
       })
       .then(setItems)
       .catch((e) => setError(e.message));
+
+    // сброс при смене фильтра
+    setVisibleRec(PAGE_REC);
   }, [dir, diff]);
 
   return (
     <div style={{ position: "relative", zIndex: 2, paddingTop: 120 }}>
       {/* HERO */}
       <section style={{ padding: "60px 28px 40px", maxWidth: 1280, margin: "0 auto" }}>
-        <div
-          className="mono"
-          style={{
-            fontSize: 11,
-            color: "var(--accent-ink)",
-            letterSpacing: "0.24em",
-            marginBottom: 18,
-          }}
-        >
+        <div className="mono" style={{
+          fontSize: 11,
+          color: "var(--accent-ink)",
+          letterSpacing: "0.24em",
+          marginBottom: 18,
+        }}>
           › ИСТОЧНИКИ
         </div>
 
-        <h1
-          className="display"
-          style={{
-            fontSize: "clamp(60px, 9vw, 140px)",
-            margin: 0,
-            color: "var(--fg)",
-          }}
-        >
+        <h1 className="display" style={{
+          fontSize: "clamp(60px, 9vw, 140px)",
+          margin: 0,
+          color: "var(--fg)",
+        }}>
           <span className="glitch" data-text="ИНТЕРВЬЮ">
             ИНТЕРВЬЮ
           </span>
         </h1>
 
-        <p
-          style={{
-            marginTop: 20,
-            fontSize: 14,
-            color: "var(--fg-dim)",
-            maxWidth: 540,
-            lineHeight: 1.6,
-          }}
-        >
+        <p style={{
+          marginTop: 20,
+          fontSize: 14,
+          color: "var(--fg-dim)",
+          maxWidth: 540,
+          lineHeight: 1.6,
+        }}>
           <span style={{ color: "var(--accent-ink)" }}>›</span> Реальные
           видео-собеседования, на основе которых формируется база вопросов.
         </p>
       </section>
 
-      {/* --- TOOLBAR (NEW) --- */}
-      <section
-        style={{
-          padding: "20px 28px",
-          maxWidth: 1280,
-          margin: "0 auto",
-          display: "flex",
-          gap: 16,
-          borderTop: "2px solid var(--fg)",
-          borderBottom: "2px solid var(--fg)",
-          flexWrap: "wrap",
-        }}
-      >
-        {/* Direction select */}
+      {/* TOOLBAR */}
+      <section style={{
+        padding: "20px 28px",
+        maxWidth: 1280,
+        margin: "0 auto",
+        display: "flex",
+        gap: 16,
+        borderTop: "2px solid var(--fg)",
+        borderBottom: "2px solid var(--fg)",
+        flexWrap: "wrap",
+      }}>
+        {/* Direction */}
         <select
           value={dir}
           onChange={(e) => setDir(e.target.value)}
@@ -92,8 +89,6 @@ export default function Recordings() {
             border: "2px solid var(--fg)",
             padding: "10px 14px",
             color: "var(--fg)",
-            fontSize: 12,
-            letterSpacing: "0.16em",
           }}
         >
           <option value="">ВСЕ НАПРАВЛЕНИЯ</option>
@@ -104,7 +99,7 @@ export default function Recordings() {
           ))}
         </select>
 
-        {/* Difficulty buttons */}
+        {/* Difficulty */}
         <div style={{ display: "flex", border: "2px solid var(--fg)" }}>
           {[["", "ВСЕ"], ["JUNIOR", "JR"], ["MIDDLE", "MD"], ["SENIOR", "SR"]].map(
             ([k, l], i, a) => (
@@ -118,11 +113,7 @@ export default function Recordings() {
                   cursor: "pointer",
                   background: diff === k ? "var(--accent)" : "transparent",
                   color: diff === k ? "#000" : "var(--fg-dim)",
-                  fontSize: 11,
-                  fontWeight: 700,
-                  letterSpacing: "0.18em",
-                  borderRight:
-                    i < a.length - 1 ? "2px solid var(--fg)" : "none",
+                  borderRight: i < a.length - 1 ? "2px solid var(--fg)" : "none",
                 }}
               >
                 {l}
@@ -135,22 +126,17 @@ export default function Recordings() {
       {/* GRID */}
       <section style={{ padding: "0 28px", maxWidth: 1280, margin: "0 auto" }}>
         {error && (
-          <div
-            className="mono"
-            style={{ color: "var(--danger)", padding: 24 }}
-          >
+          <div className="mono" style={{ color: "var(--danger)", padding: 24 }}>
             // ОШИБКА: {error}
           </div>
         )}
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-            gap: 20,
-          }}
-        >
-          {items.map((iv) => (
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+          gap: 20,
+        }}>
+          {items.slice(0, visibleRec).map((iv) => (
             <a
               key={iv.id}
               href={iv.videoUrl}
@@ -168,38 +154,45 @@ export default function Recordings() {
                     width: "100%",
                     height: 180,
                     objectFit: "cover",
-                    display: "block",
                     borderBottom: "2px solid var(--fg)",
                   }}
                 />
               )}
 
               <div style={{ padding: 18 }}>
-                <div
-                  className="mono"
-                  style={{
-                    fontSize: 10,
-                    letterSpacing: "0.22em",
-                    color: "var(--accent-ink)",
-                    marginBottom: 8,
-                  }}
-                >
+                <div className="mono" style={{
+                  fontSize: 10,
+                  letterSpacing: "0.22em",
+                  color: "var(--accent-ink)",
+                  marginBottom: 8,
+                }}>
                   {iv.directionName} · {iv.difficulty} · {iv.questionCount} ВОПР
                 </div>
 
-                <div
-                  style={{
-                    fontSize: 15,
-                    lineHeight: 1.4,
-                    fontWeight: 600,
-                  }}
-                >
+                <div style={{
+                  fontSize: 15,
+                  lineHeight: 1.4,
+                  fontWeight: 600,
+                }}>
                   {iv.title}
                 </div>
               </div>
             </a>
           ))}
         </div>
+
+        {/* LOAD MORE */}
+        {items.length > visibleRec && (
+          <div style={{ textAlign: "center", marginTop: 28 }}>
+            <button
+              className="btn-ghost"
+              data-testid="load-more-recordings"
+              onClick={() => setVisibleRec((v) => v + PAGE_REC)}
+            >
+              ЗАГРУЗИТЬ ЕЩЁ →
+            </button>
+          </div>
+        )}
       </section>
     </div>
   );

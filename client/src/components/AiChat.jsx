@@ -8,18 +8,32 @@ export default function AiChat({ questionId, questionText, onClose }) {
   const sentInitial = useRef(false);
   const scroller = useRef(null);
 
-  // ESC закрывает
+  // 🔒 скрываем navbar физически
   useEffect(() => {
-    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    const nav = document.querySelector('header[data-testid="nav-bar"]');
+    if (nav) nav.style.display = "none";
+
+    return () => {
+      if (nav) nav.style.display = "";
+    };
+  }, []);
+
+  // ESC закрывает чат
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  // Лочим скролл страницы и Lenis
+  // блокируем скролл страницы + Lenis
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+
     if (window.__lenis) window.__lenis.stop();
+
     return () => {
       document.body.style.overflow = prev;
       if (window.__lenis) window.__lenis.start();
@@ -29,32 +43,66 @@ export default function AiChat({ questionId, questionText, onClose }) {
   const send = async (text, opts = {}) => {
     const userMsg = { role: "user", content: text };
     const next = [...messages, userMsg];
+
     setMessages([...next, { role: "assistant", content: "" }]);
     setStreaming(true);
+
     try {
       const res = await fetch(`${api.base}/api/ai/explain`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ questionId: opts.firstWithContext ? questionId : undefined, messages: next }),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          questionId: opts.firstWithContext ? questionId : undefined,
+          messages: next,
+        }),
       });
+
       if (!res.ok || !res.body) throw new Error("AI request failed");
-      const reader = res.body.getReader(); const decoder = new TextDecoder();
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
       let buffer = "";
+
       while (true) {
-        const { value, done } = await reader.read(); if (done) break;
+        const { value, done } = await reader.read();
+        if (done) break;
+
         buffer += decoder.decode(value, { stream: true });
-        const events = buffer.split("\n\n"); buffer = events.pop() || "";
+        const events = buffer.split("\n\n");
+        buffer = events.pop() || "";
+
         for (const ev of events) {
           const line = ev.split("\n").find((l) => l.startsWith("data:"));
           if (!line) continue;
+
           try {
             const p = JSON.parse(line.slice(5).trim());
-            if (p.type === "chunk") setMessages((prev) => { const c = [...prev]; c[c.length-1] = { role: "assistant", content: c[c.length-1].content + p.content }; return c; });
+
+            if (p.type === "chunk") {
+              setMessages((prev) => {
+                const c = [...prev];
+                c[c.length - 1] = {
+                  role: "assistant",
+                  content: c[c.length - 1].content + p.content,
+                };
+                return c;
+              });
+            }
           } catch {}
         }
       }
     } catch (e) {
-      setMessages((prev) => { const c=[...prev]; c[c.length-1]={ role:"assistant", content:"// СБОЙ: "+e.message }; return c; });
-    } finally { setStreaming(false); }
+      setMessages((prev) => {
+        const c = [...prev];
+        c[c.length - 1] = {
+          role: "assistant",
+          content: "// СБОЙ: " + e.message,
+        };
+        return c;
+      });
+    } finally {
+      setStreaming(false);
+    }
   };
 
   useEffect(() => {
@@ -63,32 +111,158 @@ export default function AiChat({ questionId, questionText, onClose }) {
     send("Объясни этот вопрос.", { firstWithContext: true });
   }, []);
 
-  useEffect(() => { if (scroller.current) scroller.current.scrollTop = scroller.current.scrollHeight; }, [messages]);
+  useEffect(() => {
+    if (scroller.current) {
+      scroller.current.scrollTop = scroller.current.scrollHeight;
+    }
+  }, [messages]);
 
   return (
-    <div data-testid="ai-chat" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-      style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.78)", backdropFilter: "blur(4px)", display: "flex", justifyContent: "flex-end" }}>
-      <div onClick={(e) => e.stopPropagation()}
-        style={{ width: "min(640px, 100%)", height: "100%", background: "var(--bg)", borderLeft: "2px solid var(--fg)", display: "flex", flexDirection: "column" }}>
-        <div style={{ padding: "18px 22px", borderBottom: "2px solid var(--fg)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--accent)" }}>
-          <div className="mono" style={{ fontSize: 11, letterSpacing: "0.22em", color: "#000", fontWeight: 700 }}>// AI · ОБЪЯСНЕНИЕ</div>
-          <button onClick={onClose} className="mono" style={{ background: "#000", color: "var(--accent)", border: "2px solid #000", padding: "6px 12px", fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", cursor: "pointer" }}>ESC ✕</button>
+    <div
+      data-testid="ai-chat"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        background: "rgba(0,0,0,0.78)",
+        backdropFilter: "blur(4px)",
+        display: "flex",
+        justifyContent: "flex-end",
+      }}
+    >
+      <div
+        data-testid="ai-chat-panel"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: "min(640px, 100%)",
+          height: "100%",
+          background: "var(--bg)",
+          borderLeft: "2px solid var(--fg)",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        {/* HEADER (sticky) */}
+        <div
+          style={{
+            position: "sticky",
+            top: 0,
+            zIndex: 2,
+            padding: "18px 20px",
+            background: "var(--accent)",
+            color: "#000",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            borderBottom: "2px solid #000",
+          }}
+        >
+          <span
+            className="mono"
+            style={{
+              fontSize: 11,
+              letterSpacing: "0.22em",
+              fontWeight: 700,
+            }}
+          >
+            // AI · ОБЪЯСНЕНИЕ
+          </span>
+
+          <button
+            onClick={onClose}
+            data-testid="ai-chat-close"
+            className="mono"
+            style={{
+              background: "#000",
+              color: "var(--accent)",
+              border: "2px solid #000",
+              padding: "8px 14px",
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "0.2em",
+              cursor: "pointer",
+            }}
+          >
+            ESC ✕
+          </button>
         </div>
-        <div style={{ padding: "16px 22px", borderBottom: "2px solid var(--line)", color: "var(--fg-dim)", fontSize: 13 }}>
-          <span className="mono" style={{ color: "var(--accent-ink)", fontSize: 10, letterSpacing: "0.2em" }}>ВОПРОС</span>
+
+        {/* QUESTION */}
+        <div
+          style={{
+            padding: "16px 22px",
+            borderBottom: "2px solid var(--line)",
+            color: "var(--fg-dim)",
+            fontSize: 13,
+          }}
+        >
+          <span
+            className="mono"
+            style={{
+              color: "var(--accent-ink)",
+              fontSize: 10,
+              letterSpacing: "0.2em",
+            }}
+          >
+            ВОПРОС
+          </span>
           <div style={{ marginTop: 6 }}>{questionText}</div>
         </div>
-        <div ref={scroller} onWheel={(e) => e.stopPropagation()}
-          style={{ flex: 1, overflowY: "auto", padding: "20px 22px", display: "flex", flexDirection: "column", gap: 18 }}>
-          {messages.filter(m => m.role === "assistant").map((m, i) => (
-            <div key={i} className="markdown-body" style={{ fontSize: 14, lineHeight: 1.6, background: "var(--bg-2)", color: "var(--fg)", border: "2px solid var(--fg)", padding: "12px 14px" }}>
-              <ReactMarkdown>{m.content || "▌"}</ReactMarkdown>
-            </div>
-          ))}
+
+        {/* MESSAGES */}
+        <div
+          ref={scroller}
+          onWheel={(e) => e.stopPropagation()}
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: "20px 22px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 18,
+          }}
+        >
+          {messages
+            .filter((m) => m.role === "assistant")
+            .map((m, i) => (
+              <div
+                key={i}
+                className="markdown-body"
+                style={{
+                  fontSize: 14,
+                  lineHeight: 1.6,
+                  background: "var(--bg-2)",
+                  color: "var(--fg)",
+                  border: "2px solid var(--fg)",
+                  padding: "12px 14px",
+                }}
+              >
+                <ReactMarkdown>{m.content || "▌"}</ReactMarkdown>
+              </div>
+            ))}
         </div>
-        <div style={{ borderTop: "2px solid var(--fg)", padding: 14, background: "var(--bg)", textAlign: "center" }}>
-          <div className="mono" style={{ fontSize: 10, letterSpacing: "0.22em", color: "var(--muted)" }}>
-            // ВВОД ЗАБЛОКИРОВАН — ЗАКРОЙ ПО ESC ИЛИ КЛИКОМ ВНЕ ОКНА
+
+        {/* FOOTER */}
+        <div
+          style={{
+            borderTop: "2px solid var(--fg)",
+            padding: 14,
+            background: "var(--bg)",
+            textAlign: "center",
+          }}
+        >
+          <div
+            className="mono"
+            style={{
+              fontSize: 10,
+              letterSpacing: "0.22em",
+              color: "var(--muted)",
+            }}
+          >
+            // ЗАКРЫТЬ: ESC ИЛИ КЛИК ВНЕ ОКНА
           </div>
         </div>
       </div>
