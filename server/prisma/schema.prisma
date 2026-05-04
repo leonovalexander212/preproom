@@ -85,6 +85,7 @@ model InterviewQuestion {
   id          String    @id @default(cuid())
   interviewId String
   questionId  String
+  timecode    String?   // "HH:MM:SS" — null when not recorded in source
 
   interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
   question    Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)

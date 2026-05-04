@@ -38,3 +38,21 @@ export type DirectionQuestionsResponse = {
   };
   questions: Question[];
 };
+
+export type VideoAnswer = {
+  title: string;
+  videoUrl: string;
+  timecode: string;
+  youtubeUrl: string;
+};
+
+export type Interview = {
+  id: string;
+  title: string;
+  videoUrl: string;
+  thumbnailUrl: string | null;
+  directionSlug: string;
+  directionName: string;
+  difficulty: Difficulty;
+  questionCount: number;
+};

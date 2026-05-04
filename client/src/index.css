@@ -2,122 +2,239 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+/* ═══════════════════════════════════════════════════════════════════════════
+   THEME SYSTEM — CSS custom properties
+   Каждая тема задаёт 10 переменных. Компоненты обращаются только к var(--…),
+   а не к конкретным hex-цветам, поэтому смена темы — одно переключение
+   data-атрибута на <html>.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/*
+  --c-primary        основной акцент (кнопки, бейджи, активный nav)
+  --c-primary-soft   приглушённый акцент (hover, фон иконок, glass borders)
+  --c-primary-text   текст поверх акцентных фонов / светлый акцент
+  --c-primary-glow   box-shadow / glow цвет
+  --c-grad-from      левый цвет градиента CTA-кнопок
+  --c-grad-to        правый цвет градиента CTA-кнопок
+  --c-bg             фон <body>
+  --c-surface        фон карточек / glass (используется в rgba-форме)
+  --c-surface-r, --c-surface-g, --c-surface-b   RGB-каналы surface для rgba()
+  --c-text           основной текст
+  --c-text-secondary третичный текст (описания, мета)
+  --c-text-muted     приглушённый текст (заголовки колонок, счётчики)
+  --c-border         тонкие границы
+  --c-selection       ::selection фон
+*/
+
+/* ── 1. Indigo · Violet (текущая, дефолтная) ─────────────────────────────── */
+:root,
+[data-theme="indigo"] {
+  --c-primary:       #6366f1;
+  --c-primary-soft:  #818cf8;
+  --c-primary-text:  #a5b4fc;
+  --c-primary-glow:  rgba(99, 102, 241, 0.6);
+  --c-grad-from:     #6366f1;
+  --c-grad-to:       #8b5cf6;
+  --c-bg:            #0a0b10;
+  --c-surface-r: 22; --c-surface-g: 23; --c-surface-b: 29;
+  --c-text:          #e2e8f0;
+  --c-text-secondary:#94a3b8;
+  --c-text-muted:    #64748b;
+  --c-border:        rgba(255, 255, 255, 0.06);
+  --c-selection:     rgba(99, 102, 241, 0.35);
+}
+
+/* ── 2. Emerald · Teal ───────────────────────────────────────────────────── */
+[data-theme="emerald"] {
+  --c-primary:       #10b981;
+  --c-primary-soft:  #34d399;
+  --c-primary-text:  #6ee7b7;
+  --c-primary-glow:  rgba(16, 185, 129, 0.6);
+  --c-grad-from:     #059669;
+  --c-grad-to:       #14b8a6;
+  --c-bg:            #0a100e;
+  --c-surface-r: 18; --c-surface-g: 26; --c-surface-b: 23;
+  --c-text:          #e2e8f0;
+  --c-text-secondary:#94a3b8;
+  --c-text-muted:    #64748b;
+  --c-border:        rgba(255, 255, 255, 0.06);
+  --c-selection:     rgba(16, 185, 129, 0.3);
+}
+
+/* ── 3. Amber · Orange ───────────────────────────────────────────────────── */
+[data-theme="amber"] {
+  --c-primary:       #f59e0b;
+  --c-primary-soft:  #fbbf24;
+  --c-primary-text:  #fcd34d;
+  --c-primary-glow:  rgba(245, 158, 11, 0.55);
+  --c-grad-from:     #d97706;
+  --c-grad-to:       #ea580c;
+  --c-bg:            #0f0c08;
+  --c-surface-r: 26; --c-surface-g: 22; --c-surface-b: 16;
+  --c-text:          #e2e8f0;
+  --c-text-secondary:#94a3b8;
+  --c-text-muted:    #64748b;
+  --c-border:        rgba(255, 255, 255, 0.06);
+  --c-selection:     rgba(245, 158, 11, 0.3);
+}
+
+/* ── 4. Rose · Coral ─────────────────────────────────────────────────────── */
+[data-theme="rose"] {
+  --c-primary:       #f43f5e;
+  --c-primary-soft:  #fb7185;
+  --c-primary-text:  #fda4af;
+  --c-primary-glow:  rgba(244, 63, 94, 0.55);
+  --c-grad-from:     #e11d48;
+  --c-grad-to:       #f97316;
+  --c-bg:            #0f0a0b;
+  --c-surface-r: 28; --c-surface-g: 20; --c-surface-b: 22;
+  --c-text:          #e2e8f0;
+  --c-text-secondary:#94a3b8;
+  --c-text-muted:    #64748b;
+  --c-border:        rgba(255, 255, 255, 0.06);
+  --c-selection:     rgba(244, 63, 94, 0.3);
+}
+
+/* ── 5. Cyan · Sky ───────────────────────────────────────────────────────── */
+[data-theme="cyan"] {
+  --c-primary:       #06b6d4;
+  --c-primary-soft:  #22d3ee;
+  --c-primary-text:  #67e8f9;
+  --c-primary-glow:  rgba(6, 182, 212, 0.55);
+  --c-grad-from:     #0891b2;
+  --c-grad-to:       #0284c7;
+  --c-bg:            #080d10;
+  --c-surface-r: 16; --c-surface-g: 24; --c-surface-b: 28;
+  --c-text:          #e2e8f0;
+  --c-text-secondary:#94a3b8;
+  --c-text-muted:    #64748b;
+  --c-border:        rgba(255, 255, 255, 0.06);
+  --c-selection:     rgba(6, 182, 212, 0.3);
+}
+
+/* ── 6. Mono · Lime ──────────────────────────────────────────────────────── */
+[data-theme="mono"] {
+  --c-primary:       #84cc16;
+  --c-primary-soft:  #a3e635;
+  --c-primary-text:  #bef264;
+  --c-primary-glow:  rgba(132, 204, 22, 0.5);
+  --c-grad-from:     #65a30d;
+  --c-grad-to:       #84cc16;
+  --c-bg:            #0a0a0a;
+  --c-surface-r: 20; --c-surface-g: 20; --c-surface-b: 20;
+  --c-text:          #e2e8f0;
+  --c-text-secondary:#a1a1aa;
+  --c-text-muted:    #71717a;
+  --c-border:        rgba(255, 255, 255, 0.06);
+  --c-selection:     rgba(132, 204, 22, 0.3);
+}
+
+/* ── 7. Светлая тема ─────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  --c-primary:       #4f46e5;
+  --c-primary-soft:  #6366f1;
+  --c-primary-text:  #4338ca;
+  --c-primary-glow:  rgba(79, 70, 229, 0.35);
+  --c-grad-from:     #4f46e5;
+  --c-grad-to:       #7c3aed;
+  --c-bg:            #f8fafc;
+  --c-surface-r: 255; --c-surface-g: 255; --c-surface-b: 255;
+  --c-text:          #1e293b;
+  --c-text-secondary:#475569;
+  --c-text-muted:    #94a3b8;
+  --c-border:        rgba(0, 0, 0, 0.08);
+  --c-selection:     rgba(79, 70, 229, 0.2);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE STYLES
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 @layer base {
   html {
-    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    scrollbar-gutter: stable;
+    transition: background-color 300ms ease, color 300ms ease;
   }
 
   body {
     margin: 0;
-    @apply bg-bg-base text-fg-primary min-h-screen;
+    background: var(--c-bg);
+    color: var(--c-text);
+    min-height: 100vh;
   }
 
-  /* === Глобальные плавные переходы для всех интерактивных элементов ===
-     Любая кнопка, ссылка или инпут автоматически получает плавный переход
-     по фону, рамке, тексту, transform и opacity — не нужно ручно добавлять
-     transition-colors каждый раз. Кривая Apple-стиля одинакова по всему сайту. */
-  button,
-  a,
-  input,
-  textarea,
-  select,
-  [role='button'] {
+  ::selection {
+    background: var(--c-selection);
+  }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--c-bg); }
+  ::-webkit-scrollbar-thumb { background: #1e2030; border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: #2a2d44; }
+
+  [data-theme="light"] ::-webkit-scrollbar-thumb { background: #cbd5e1; }
+  [data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  [data-theme="light"] ::-webkit-scrollbar-track { background: var(--c-bg); }
+
+  input::placeholder { color: var(--c-text-muted); }
+
+  button, a, input, textarea, select, [role='button'] {
     transition-property: background-color, background-image, border-color, color,
-                        fill, stroke, opacity, box-shadow, transform, filter,
-                        -webkit-backdrop-filter, backdrop-filter;
-    transition-duration: 250ms;
-    transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
-  }
-
-  /* Кастомный скроллбар под темную тему */
-  ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
-  ::-webkit-scrollbar-track {
-    @apply bg-bg-base;
-  }
-  ::-webkit-scrollbar-thumb {
-    @apply bg-bg-border rounded;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-fg-tertiary;
+                         fill, stroke, opacity, box-shadow, transform, filter;
+    transition-duration: 200ms;
+    transition-timing-function: ease;
   }
 }
 
-@layer utilities {
-  /* === Ambient-свечения в фоне ===
-     Размытые цветные пятна, через которые пробивается glass-слой.
-     Прозрачный слой карточек размывает их и создаёт глубину. */
-  .ambient-glow {
-    position: absolute;
-    border-radius: 9999px;
-    filter: blur(100px);
-    opacity: 0.4;
-    pointer-events: none;
-    z-index: 0;
-  }
+/* ═══════════════════════════════════════════════════════════════════════════
+   UTILITY CLASSES
+   ═══════════════════════════════════════════════════════════════════════════ */
 
-  /* === Glass-карточка ===
-     Полупрозрачный фон с backdrop-blur. Работает поверх ambient-пятен. */
+@layer utilities {
+  /* Glass cards */
   .glass {
-    background: rgba(28, 28, 38, 0.55);
-    backdrop-filter: blur(20px) saturate(140%);
-    -webkit-backdrop-filter: blur(20px) saturate(140%);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(var(--c-surface-r), var(--c-surface-g), var(--c-surface-b), 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--c-border);
   }
   .glass-strong {
-    background: rgba(28, 28, 38, 0.7);
-    backdrop-filter: blur(24px) saturate(160%);
-    -webkit-backdrop-filter: blur(24px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(var(--c-surface-r), var(--c-surface-g), var(--c-surface-b), 0.82);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--c-border);
   }
   .glass-subtle {
-    background: rgba(28, 28, 38, 0.35);
-    backdrop-filter: blur(16px) saturate(140%);
-    -webkit-backdrop-filter: blur(16px) saturate(140%);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(var(--c-surface-r), var(--c-surface-g), var(--c-surface-b), 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--c-border);
   }
 
-  /* === Градиентный текст для выразительных участков заголовков === */
+  /* Gradient text */
   .text-gradient {
-    background: linear-gradient(135deg, #c7ccff 0%, #8482f7 50%, #6d66ed 100%);
+    background: linear-gradient(135deg, var(--c-primary-soft) 0%, var(--c-primary-text) 50%, var(--c-primary-soft) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
   }
 
-  /* === Hover для кликабельных карточек ===
-     Нежный lift + увеличение яркости границы. */
+  /* Card hover lift */
   .card-hover {
-    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
-                background-color 0.25s ease,
-                border-color 0.25s ease;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   }
   .card-hover:hover {
-    transform: translateY(-1px);
-    background: rgba(28, 28, 38, 0.7);
-    border-color: rgba(165, 169, 255, 0.18);
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--c-primary) 40%, transparent) !important;
+    box-shadow: 0 14px 32px -16px var(--c-primary-glow);
   }
 
-  /* === Scroll-reveal: простое fade-in при появлении в viewport === */
-  .reveal {
-    opacity: 0;
-    transform: translateY(8px);
-    transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-  }
-  .reveal.is-visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  /* === Первый рендер элементов hero === */
+  /* Page transitions */
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -126,87 +243,94 @@
     animation: fadeIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
-  /* === Плавный переход между страницами ===
-     При смене route ключ обновляется, элемент перерендеривается —
-     и срабатывает эта анимация. */
   @keyframes pageEnter {
-    from { opacity: 0; transform: translateY(8px); }
+    from { opacity: 0; transform: translateY(6px); }
     to   { opacity: 1; transform: translateY(0); }
   }
   .animate-page-enter {
     animation: pageEnter 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
-  /* === Появление модалки ОИ — fade + scale-up по центру === */
-  @keyframes modalEnter {
-    from { opacity: 0; transform: scale(0.96) translateY(8px); }
-    to   { opacity: 1; transform: scale(1) translateY(0); }
+  @keyframes questionEnter {
+    from { opacity: 0; transform: translateY(10px); filter: blur(4px); }
+    to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
   }
-  .animate-modal-enter {
-    animation: modalEnter 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  .animate-question {
+    animation: questionEnter 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
-  /* === Стилизация markdown-ответов ОИ === */
-  .markdown-body h2 {
-    font-size: 0.95rem;
-    font-weight: 700;
-    margin: 0.8em 0 0.4em;
-    color: #e8e8f0;
+  @keyframes resultCard {
+    from { opacity: 0; transform: translateY(14px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0)    scale(1); }
   }
-  .markdown-body h3 {
-    font-size: 0.88rem;
-    font-weight: 600;
-    margin: 0.7em 0 0.3em;
-    color: #e8e8f0;
+  .animate-result-card {
+    animation: resultCard 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
-  .markdown-body p {
-    margin: 0.5em 0;
+
+  @keyframes orbDrift {
+    0%, 100% { transform: translate(-50%, 0)    scale(1);    opacity: 0.55; }
+    50%      { transform: translate(-50%, 30px) scale(1.05); opacity: 0.75; }
   }
-  .markdown-body ul,
-  .markdown-body ol {
-    margin: 0.5em 0;
-    padding-left: 1.4em;
+  .animate-orb { animation: orbDrift 8s ease-in-out infinite; }
+
+  @keyframes twk-ripple {
+    0%   { transform: scale(0.2); opacity: 0.85; }
+    100% { transform: scale(1);   opacity: 0; }
   }
-  .markdown-body li {
-    margin: 0.2em 0;
+
+  @keyframes twk-blink { 50% { opacity: 0; } }
+  .twk-cursor {
+    display: inline-block;
+    width: 0.55em; background: currentColor; height: 1em;
+    vertical-align: -0.15em;
+    animation: twk-blink 900ms steps(1) infinite;
+    margin-left: 1px;
   }
-  .markdown-body strong {
-    color: #e8e8f0;
-    font-weight: 600;
+
+  @keyframes twk-pulse-glow {
+    0%, 100% { box-shadow: 0 0 0 0 var(--c-primary-glow); }
+    50%       { box-shadow: 0 0 0 10px transparent; }
   }
+  .twk-pulse { animation: twk-pulse-glow 2.4s ease-out infinite; }
+
+  @keyframes twk-shimmer {
+    0%   { transform: translateX(-120%); }
+    100% { transform: translateX(220%); }
+  }
+  .twk-shimmer-host { position: relative; overflow: hidden; }
+  .twk-shimmer-host::after {
+    content: "";
+    position: absolute; top: 0; bottom: 0; left: 0; width: 40%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+    transform: translateX(-120%); pointer-events: none;
+  }
+  .twk-shimmer-host:hover::after { animation: twk-shimmer 900ms ease; }
+
+  /* Markdown rendering */
+  .markdown-body h2 { font-size: 0.95rem; font-weight: 700; margin: 0.8em 0 0.4em; color: var(--c-text); }
+  .markdown-body h3 { font-size: 0.88rem; font-weight: 600; margin: 0.7em 0 0.3em; color: var(--c-text); }
+  .markdown-body p  { margin: 0.5em 0; }
+  .markdown-body ul, .markdown-body ol { margin: 0.5em 0; padding-left: 1.4em; }
+  .markdown-body li { margin: 0.2em 0; }
+  .markdown-body strong { color: var(--c-text); font-weight: 600; }
   .markdown-body code {
-    background: rgba(109, 102, 237, 0.15);
-    color: #c7ccff;
-    padding: 0.1em 0.4em;
-    border-radius: 4px;
-    font-size: 0.88em;
-    font-family: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    background: color-mix(in srgb, var(--c-primary) 15%, transparent);
+    color: var(--c-primary-text);
+    padding: 0.1em 0.4em; border-radius: 4px;
+    font-size: 0.88em; font-family: 'JetBrains Mono', ui-monospace, monospace;
   }
   .markdown-body pre {
     background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 8px;
-    padding: 0.8em;
-    overflow-x: auto;
-    margin: 0.6em 0;
+    border: 1px solid var(--c-border);
+    border-radius: 8px; padding: 0.8em; overflow-x: auto; margin: 0.6em 0;
   }
-  .markdown-body pre code {
-    background: none;
-    color: #e8e8f0;
-    padding: 0;
-  }
-  .markdown-body a {
-    color: #a5a9ff;
-    text-decoration: underline;
-  }
+  .markdown-body pre code { background: none; color: var(--c-text); padding: 0; }
+  .markdown-body a { color: var(--c-primary-text); text-decoration: underline; }
   .markdown-body blockquote {
-    border-left: 2px solid rgba(109, 102, 237, 0.4);
-    padding-left: 0.8em;
-    margin: 0.6em 0;
-    color: #9a9ab0;
+    border-left: 2px solid color-mix(in srgb, var(--c-primary) 40%, transparent);
+    padding-left: 0.8em; margin: 0.6em 0; color: var(--c-text-secondary);
   }
 
-  /* === Обрезка длинного текста (2 строки) === */
   .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;

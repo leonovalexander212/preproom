@@ -4,41 +4,38 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Фоны темной темы — глубокие, с легким оттенком
         bg: {
-          base: '#0a0a0f',       // самый глубокий фон страницы
-          surface: '#13131a',    // поверхности карточек
-          elevated: '#1c1c26',   // приподнятые блоки (hover, активные)
-          border: '#2a2a38',     // границы
+          base: '#0a0b10',
+          surface: '#16171d',
+          elevated: '#1e1f28',
+          border: '#2a2a38',
         },
-        // Текст
         fg: {
-          primary: '#e8e8f0',
-          secondary: '#9a9ab0',
-          tertiary: '#6b6b85',
+          primary: '#e2e8f0',
+          secondary: '#94a3b8',
+          tertiary: '#64748b',
         },
-        // Акцент — violet/indigo
         accent: {
-          50: '#eef0ff',
+          50:  '#eef0ff',
           100: '#e0e3ff',
           200: '#c7ccff',
-          300: '#a5a9ff',
-          400: '#8482f7',
-          500: '#6d66ed',     // основной акцент
-          600: '#5b52d9',
-          700: '#4d42b8',
-          800: '#3f3694',
-          900: '#342d78',
+          300: '#a5b4fc',
+          400: '#818cf8',
+          500: '#6366f1',
+          600: '#4f46e5',
+          700: '#4338ca',
+          800: '#3730a3',
+          900: '#312e81',
         },
-        // Семантика для грейдов
         grade: {
-          junior: '#97c459',
-          middle: '#ef9f27',
-          senior: '#e24b4a',
+          junior: '#34d399',
+          middle: '#fbbf24',
+          senior: '#fb7185',
         },
       },
       fontFamily: {
-        sans: ['Manrope', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
       },
       borderRadius: {
         lg: '10px',
@@ -48,4 +45,3 @@ export default {
   },
   plugins: [],
 }
-
