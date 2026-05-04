@@ -13,7 +13,7 @@ import { Link } from "react-router-dom";
   Всё инлайново — чтобы файл копировался одним куском без правок CSS.
 */
 
-const API = ""; // тот же origin через vite proxy, как у остальных fetch в проекте
+const API = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const LS_KEY = "pp-mock-session";
 
 const DIRECTIONS = [
