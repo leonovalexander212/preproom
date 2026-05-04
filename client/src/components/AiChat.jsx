@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import ReactMarkdown from "react-markdown";
 import { api } from "../lib/api.js";
 
@@ -8,6 +9,7 @@ export default function AiChat({ questionId, questionText, onClose }) {
   const sentInitial = useRef(false);
   const scroller = useRef(null);
 
+  // Esc для закрытия
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") onClose();
@@ -16,7 +18,7 @@ export default function AiChat({ questionId, questionText, onClose }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  // Запираем скролл + скрываем NavBar
+  // Лочим скролл страницы и прячем NavBar
   useEffect(() => {
     const html = document.documentElement;
     const body = document.body;
@@ -123,7 +125,11 @@ export default function AiChat({ questionId, questionText, onClose }) {
     }
   }, [messages]);
 
-  return (
+  // === КЛЮЧЕВОЙ ФИКС ===
+  // Рендерим ВНЕ любого трансформированного предка — прямо в document.body.
+  // Это решает проблему "окно в миллиметр" из-за transform на родителях
+  // (Lenis / GSAP / scroll-trigger), которые ломают position:fixed.
+  const ui = (
     <div
       data-testid="ai-chat"
       onClick={(e) => {
@@ -131,12 +137,21 @@ export default function AiChat({ questionId, questionText, onClose }) {
       }}
       style={{
         position: "fixed",
-        inset: 0,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100vw",
+        height: "100vh",
         zIndex: 9999,
         background: "rgba(0,0,0,0.78)",
         backdropFilter: "blur(4px)",
+        WebkitBackdropFilter: "blur(4px)",
         display: "flex",
         justifyContent: "flex-end",
+        // важно: исключаем любые transform-наследия
+        transform: "none",
+        contain: "layout paint",
       }}
     >
       <div
@@ -144,12 +159,13 @@ export default function AiChat({ questionId, questionText, onClose }) {
         onClick={(e) => e.stopPropagation()}
         style={{
           width: "min(640px, 100%)",
-          height: "100%",
+          height: "100vh",
           background: "var(--bg)",
           borderLeft: "2px solid var(--fg)",
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
+          transform: "none",
         }}
       >
         <div
@@ -216,7 +232,6 @@ export default function AiChat({ questionId, questionText, onClose }) {
           <div style={{ marginTop: 6 }}>{questionText}</div>
         </div>
 
-        {/* ===== ЗАМЕНЁННЫЙ БЛОК СООБЩЕНИЙ ===== */}
         <div
           ref={scroller}
           data-lenis-prevent
@@ -275,4 +290,6 @@ export default function AiChat({ questionId, questionText, onClose }) {
       </div>
     </div>
   );
+
+  return createPortal(ui, document.body);
 }

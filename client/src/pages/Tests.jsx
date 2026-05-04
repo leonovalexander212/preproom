@@ -37,9 +37,7 @@ export default function Tests() {
       <h1 className="display" style={{ fontSize: "clamp(56px, 9vw, 140px)", margin: 0, color: "var(--fg)" }}>
         <span className="glitch" data-text="ТЕСТЫ">ТЕСТЫ</span>
       </h1>
-      <p style={{ marginTop: 20, fontSize: 14, color: "var(--fg-dim)", maxWidth: 560, lineHeight: 1.6 }}>
-        <span style={{ color: "var(--accent-ink)" }}>›</span> Проходи повторно столько раз, сколько нужно. Результаты не сохраняются на сервере — только подсказывают, куда копать.
-      </p>
+
 
       <div style={{ marginTop: 40, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
         {TESTS.map((t) => {
@@ -75,9 +73,7 @@ export default function Tests() {
         })}
       </div>
 
-      <div style={{ marginTop: 32, fontSize: 12, color: "var(--muted)" }} className="mono">
-        // СТАРЫЙ КВИЗ ПО СЛУЧАЙНЫМ ВОПРОСАМ УБРАН — ПЕРЕЕХАЛ В <Link to="/directions" style={{ color: "var(--accent-ink)" }}>НАПРАВЛЕНИЯ</Link> → КОНКРЕТНЫЙ СТЕК
-      </div>
+
     </div>
   );
 }

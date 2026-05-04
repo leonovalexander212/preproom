@@ -66,7 +66,7 @@ export default function Directions() {
                   <div className="mono" style={{ fontSize: 10, letterSpacing: "0.2em", opacity: 0.55 }}>{d._count.questions} ВОПР · {d._count.interviews} ИНТ ↗</div>
                 </div>
                 <div style={{ position: "absolute", bottom: 18, right: 18, opacity: 0.85, pointerEvents: "none" }}>
-                  <DomainIcon slug={d.slug} />
+                  <DomainIcon slug={d.slug} hasContent={(d._count?.questions ?? 0) > 0} />
                 </div>
                 <div>
                   <div className="display" style={{ fontSize: 48, lineHeight: 0.9 }}>{d.name}</div>

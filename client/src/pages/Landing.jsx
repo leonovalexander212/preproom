@@ -93,7 +93,7 @@ export default function Landing() {
           border: "1px solid var(--line)", padding: "6px 12px",
         }}>
           <span style={{ width: 8, height: 8, background: "var(--accent)", display: "inline-block" }} />
-          NEW · 2026 · BUILD #0001
+          NEW · 2026 · BUILD #0015
         </div>
 
         <h1 className="display" style={{ fontSize: "clamp(56px, 11vw, 168px)", color: "var(--fg)", margin: 0 }}>
@@ -113,8 +113,7 @@ export default function Landing() {
         <div style={{ marginTop: 40, display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 40, alignItems: "end" }}>
           <p className="hero-meta" style={{ fontSize: 16, color: "var(--fg-dim)", lineHeight: 1.55, maxWidth: 540, margin: 0 }}>
             <span style={{ color: "var(--accent)" }}>›</span>{" "}
-            Платформа для подготовки к самым требовательным инженерным собеседованиям —
-            реальное программирование, системный дизайн и алгоритмы. Никаких компромиссов.
+            Платформа для подготовки к самым требовательным инженерным собеседованиям.
           </p>
           <div className="hero-meta" style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
             <Link to="/directions" ref={ctaRef} className="btn-brutal" data-testid="hero-cta-start">
@@ -207,11 +206,11 @@ export default function Landing() {
               › СИМУЛЯТОР
             </div>
             <h2 className="display reveal-title" style={{ fontSize: "clamp(44px, 6.4vw, 104px)", margin: 0, color: "var(--fg)" }}>
-              БОЕВОЕ<br/>
-              <span style={{ color: "var(--accent)" }}>ОКРУЖЕНИЕ</span>
+              MOCK<br/>
+              <span style={{ color: "var(--accent)" }}>interview</span>
             </h2>
             <p className="reveal-title" style={{ marginTop: 28, color: "var(--fg-dim)", lineHeight: 1.6, fontSize: 14, maxWidth: 460 }}>
-              Хватит тренироваться в вакууме. Наш симулятор позволяет получить опыт прохождения
+              Наш симулятор позволяет получить опыт прохождения
               мок-собеседования абсолютно бесплатно.
             </p>
             <ul style={{ listStyle: "none", padding: 0, margin: "32px 0 0", display: "grid", gap: 14 }}>

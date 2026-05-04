@@ -54,8 +54,8 @@ export default function Recordings() {
             color: "var(--fg)",
           }}
         >
-          <span className="glitch" data-text="ИНТЕРВЬЮ">
-            ИНТЕРВЬЮ
+          <span className="glitch" data-text="ВИДЕО">
+            ВИДЕО
           </span>
         </h1>
 
@@ -68,7 +68,7 @@ export default function Recordings() {
             lineHeight: 1.6,
           }}
         >
-          <span style={{ color: "var(--accent-ink)" }}>›</span> Реальные видео-собеседования, на основе которых формируется база вопросов.
+          <span style={{ color: "var(--accent-ink)" }}>›</span> Видео-собеседования, на основе которых формируется база вопросов.
         </p>
       </section>
 
@@ -153,7 +153,7 @@ export default function Recordings() {
               <ThumbImg src={iv.thumbnailUrl} />
 
               <div style={{ padding: 18 }}>
-                <div
+                 <div
                   className="mono"
                   style={{
                     fontSize: 10,
@@ -162,7 +162,7 @@ export default function Recordings() {
                     marginBottom: 8,
                   }}
                 >
-                  {iv.directionName} · {iv.difficulty} · {iv.questionCount} ВОПР
+                  {iv.directionName} · {iv.difficulty}
                 </div>
 
                 <div style={{ fontSize: 15, lineHeight: 1.4, fontWeight: 600 }}>
@@ -225,7 +225,7 @@ function ThumbImg({ src }) {
   );
 }
 
-/* ===== Dropdown (ИЗМЕНЁН ТОЛЬКО ОТКРЫТЫЙ БЛОК) ===== */
+/* ===== Dropdown ===== */
 function Dropdown({ value, onChange, options, placeholder }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -362,6 +362,7 @@ export function Pagination({ page, totalPages, onChange }) {
         gap: 8,
         marginTop: 40,
         flexWrap: "wrap",
+        alignItems: "center",
       }}
     >
       <button
@@ -374,9 +375,11 @@ export function Pagination({ page, totalPages, onChange }) {
 
       {pages.map((p, i) =>
         p === "..." ? (
-          <span key={`d${i}`} style={{ alignSelf: "center", color: "var(--muted)" }}>
-            …
-          </span>
+          <PageJumpInput
+            key={`d${i}`}
+            totalPages={totalPages}
+            onJump={onChange}
+          />
         ) : (
           <button key={p} onClick={() => onChange(p)} style={btn(p === page)}>
             {p}
@@ -395,6 +398,57 @@ export function Pagination({ page, totalPages, onChange }) {
   );
 }
 
+/* поле ввода номера страницы вместо «…» */
+function PageJumpInput({ totalPages, onJump }) {
+  const [val, setVal] = useState("");
+
+  const submit = () => {
+    const n = parseInt(val, 10);
+    if (!Number.isNaN(n)) {
+      const clamped = Math.min(Math.max(1, n), totalPages);
+      onJump(clamped);
+    }
+    setVal("");
+  };
+
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      pattern="[0-9]*"
+      value={val}
+      onChange={(e) => setVal(e.target.value.replace(/\D/g, ""))}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          submit();
+          e.currentTarget.blur();
+        }
+      }}
+      onBlur={submit}
+      placeholder="…"
+      title={`Введите номер страницы (1–${totalPages}) и нажмите Enter`}
+      data-testid="page-jump-input"
+      className="mono"
+      style={{
+        width: 56,
+        height: 40,
+        textAlign: "center",
+        fontFamily: "'Space Mono', monospace",
+        fontSize: 13,
+        fontWeight: 700,
+        border: "2px dashed var(--fg)",
+        background: "var(--card)",
+        color: "var(--fg)",
+        outline: "none",
+        cursor: "text",
+        boxSizing: "border-box",
+      }}
+    />
+  );
+}
+
+/* ===== helper ===== */
 function pageRange(current, total) {
   const out = [];
   const push = (v) => out.push(v);

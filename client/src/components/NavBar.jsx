@@ -29,7 +29,7 @@ export default function NavBar({ theme, onToggleTheme }) {
 
     const links = [
     { to: "/directions", label: "НАПРАВЛЕНИЯ" },
-    { to: "/recordings", label: "ИНТЕРВЬЮ" },
+    { to: "/recordings", label: "ВИДЕО" },
     { to: "/tests",      label: "ТЕСТЫ" },
     ];
 

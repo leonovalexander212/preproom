@@ -32,7 +32,7 @@ const Meta = ({ children }) => (
 
 /* ==================== DOCS ==================== */
 export const DocsPage = () => (
-  <Page title="ДОКУМЕНТАЦИЯ" kicker="› DEVELOPER · API">
+  <Page title="ДОКУМЕНТАЦИЯ" kicker="› ДОКУМЕНТАЦИЯ">
     <Meta>PREPROOM · REST API · V1</Meta>
     <p>
       PrepRoom предоставляет открытый REST API без авторизации. Все эндпоинты
@@ -89,8 +89,8 @@ curl https://api.preproom.app/api/directions/java/questions?level=MIDDLE`}
 
 /* ==================== PRIVACY ==================== */
 export const PrivacyPage = () => (
-  <Page title="КОНФИДЕНЦИАЛЬНОСТЬ" kicker="› POLICY · 01">
-    <Meta>Редакция от 15.01.2026</Meta>
+  <Page title="КОНФИДЕНЦИАЛЬНОСТЬ" kicker="› ВАЖНО">
+    <Meta>Редакция от 04.05.2026</Meta>
     <p>
       Мы уважаем твою приватность. Этот документ объясняет простыми словами,
       какие данные PrepRoom обрабатывает, зачем и как ими распоряжается.
@@ -139,8 +139,8 @@ export const PrivacyPage = () => (
 
 /* ==================== TERMS ==================== */
 export const TermsPage = () => (
-  <Page title="УСЛОВИЯ" kicker="› TERMS · OF USE">
-    <Meta>Редакция от 15.01.2026</Meta>
+  <Page title="УСЛОВИЯ" kicker="› УСЛОВИЯ">
+    <Meta>Редакция от 04.05.2026</Meta>
     <p>
       Используя PrepRoom, ты соглашаешься с условиями ниже. Если какой-либо пункт
       тебя не устраивает — просто не пользуйся сервисом.
@@ -208,7 +208,7 @@ export const StatusPage = () => {
   const label = state === "ok" ? "OPERATIONAL" : state === "down" ? "DOWNTIME" : "CHECKING...";
 
   return (
-    <Page title="СТАТУС" kicker="› HEALTHCHECK · LIVE">
+    <Page title="СТАТУС" kicker="›СТАТУС">
       <Meta>Автообновление каждые 30 секунд</Meta>
 
       <div style={{
@@ -244,12 +244,10 @@ export const StatusPage = () => {
 
 /* ==================== CONTACT ==================== */
 export const ContactPage = () => (
-  <Page title="КОНТАКТЫ" kicker="› GET · IN · TOUCH">
-    <Meta>Обычно отвечаю в течение 24 часов</Meta>
+  <Page title="КОНТАКТЫ" kicker="› CALL ME MAYBE">
     <p>
       Нашёл баг, есть идея или хочется обсудить сотрудничество — я на связи.
-      Лучший способ — почта или GitHub. Если вопрос срочный, пиши с пометкой
-      «URGENT» в теме письма.
+
     </p>
 
     <div style={{
@@ -269,7 +267,7 @@ export const ContactPage = () => (
       PrepRoom — пет-проект, запущенный в 2026 году как часть
       выпускной работы в СибГУТИ. Развивается в open-source парадигме:
       база вопросов пополняется из публичных YouTube-интервью,
-      весь код доступен на GitHub, pull-request-ы приветствуются.
+      весь код доступен на GitHub.
     </p>
 
 
