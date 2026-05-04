@@ -5,7 +5,7 @@ import directionsRouter from './routes/directions';
 import aiRouter from './routes/ai';
 import questionsRouter from './routes/questions';
 import interviewsRouter from './routes/interviews';
-
+import mockRouter from './routes/mock';
 dotenv.config();
 
 const app = express();
@@ -22,7 +22,7 @@ app.use('/api/directions', directionsRouter);
 app.use('/api/ai', aiRouter);
 app.use('/api/questions', questionsRouter);
 app.use('/api/interviews', interviewsRouter);
-
+app.use('/api/mock', mockRouter);
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('=== UNHANDLED ERROR ===');
   console.error(err);

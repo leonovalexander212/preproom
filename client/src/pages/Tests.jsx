@@ -3,6 +3,16 @@ import { Link } from "react-router-dom";
 
 const TESTS = [
   {
+    id: "mock",
+    title: "AI MOCK INTERVIEW",
+    tag: "~20 МИН · 5 ВОПРОСОВ + 1 ЛАЙВ-КОДИНГ",
+    desc: "Реальное собеседование с ИИ-интервьюером. Он ревьюит строго, как техлид. В конце — оценка, вердикт и что подтянуть в первую очередь.",
+    to: "/mock",
+    cta: "НАЧАТЬ СОБЕС ↗",
+    accent: "#a78bfa",
+    status: "READY",
+  },
+  {
     id: "direction",
     title: "ПРОФОРИЕНТАЦИЯ",
     tag: "10 ВОПРОСОВ · 2 МИН",

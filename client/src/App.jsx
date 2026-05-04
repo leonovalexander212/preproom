@@ -14,7 +14,7 @@ import Tests from "./pages/Tests.jsx";
 import Quiz from "./pages/Quiz.jsx";
 import QuizDirection from "./pages/QuizDirection.jsx";
 import { DocsPage, PrivacyPage, TermsPage, StatusPage, ContactPage } from "./pages/Legal.jsx";
-
+import MockInterview from "./pages/MockInterview.jsx";
 /* ===== ПЕРЕХОДЫ МЕЖДУ СТРАНИЦАМИ (мягкий fade) ===== */
 const PAGE_TRANSITION_CSS = `
 @keyframes ppPageIn {
@@ -51,6 +51,7 @@ function AnimatedRoutes() {
         <Route path="/status" element={<StatusPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="*" element={<Landing />} />
+        <Route path="/mock" element={<MockInterview />} />
       </Routes>
     </div>
   );
