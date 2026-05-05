@@ -26,9 +26,12 @@ const TESTS = [
   {
     id: "softskills",
     title: "SOFT SKILLS",
-    tag: "СКОРО",
-    desc: "Мини-тест про коммуникацию, конфликты и работу в команде.",
-    to: null, cta: "В РАЗРАБОТКЕ", accent: "#ff5b00", status: "WIP",
+    tag: "~4 МИН · 12 СЦЕНАРИЕВ",
+    desc: "Симуляция рабочих ситуаций: конфликт, фидбек, ответственность и ясность коммуникации.",
+    to: "/tests/soft-skills",
+    cta: "ПРОЙТИ ТЕСТ ↗",
+    accent: "#ff5b00",
+    status: "READY",
   },
 ];
 

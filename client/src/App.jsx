@@ -12,6 +12,7 @@ import Recordings from "./pages/Recordings.jsx";
 import Tests from "./pages/Tests.jsx";
 import Quiz from "./pages/Quiz.jsx";
 import QuizDirection from "./pages/QuizDirection.jsx";
+import SoftSkills from "./pages/SoftSkills.jsx";
 import { DocsPage, PrivacyPage, TermsPage, StatusPage, ContactPage } from "./pages/Legal.jsx";
 import MockInterview from "./pages/MockInterview.jsx";
 
@@ -44,6 +45,7 @@ function AnimatedRoutes() {
         <Route path="/recordings" element={<Recordings />} />
         <Route path="/tests" element={<Tests />} />
         <Route path="/tests/quiz" element={<Quiz />} />
+        <Route path="/tests/soft-skills" element={<SoftSkills />} />
         <Route path="/quiz-direction" element={<QuizDirection />} />
         <Route path="/mock" element={<MockInterview />} />
         <Route path="/docs" element={<DocsPage />} />
