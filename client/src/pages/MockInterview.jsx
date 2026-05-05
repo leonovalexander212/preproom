@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
+import gsap from "gsap";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const LS_KEY = "pp-mock-session";
@@ -126,7 +128,7 @@ function Setup({ onStart, rateLimit, meta }) {
       </h1>
       <p style={{ opacity: 0.7, maxWidth: 680, margin: "0 0 28px", fontSize: 16, lineHeight: 1.5 }}>
         Реалистичный тех-собес с <b>Джарвисом</b>. 15 технических вопросов — из реальных видео-интервью в БД.
-        Лайв-кодинг — задачи в файлах, оценка автотестами. Финальный ранг — в стиле Devil May Cry.
+        Лайв-кодинг — задачи в файлах, оценка автотестами.
       </p>
 
       {rateLimit && (
@@ -565,70 +567,271 @@ function extFromLang(l) {
 /* ------------------------------- DMC RANK ------------------------------- */
 
 const RANK_ORDER = ["D", "C", "B", "A", "S", "SS", "SSS"];
+const SCRAMBLE_POOL = ["D","C","B","A","S","#","%","@","*","&","?","X","§","Ω","∆"];
 
 const RANK_THEMES = {
-  D:   { top:"#ffffff", mid:"#cfcfcf", bot:"#6a6a6a", glow:"rgba(255,255,255,0.35)", accent:"#9a9a9a",   label:"DULL"  },
-  C:   { top:"#dcfffb", mid:"#7EEADF", bot:"#1d8078", glow:"rgba(78,205,196,0.55)",  accent:"#4ECDC4",   label:"COOL"  },
-  B:   { top:"#dce9ff", mid:"#6aa7ff", bot:"#1f49a6", glow:"rgba(59,130,246,0.6)",   accent:"#3B82F6",   label:"BRAVO" },
-  A:   { top:"#f1dcff", mid:"#c38bff", bot:"#5f21a3", glow:"rgba(168,85,247,0.65)",  accent:"#A855F7",   label:"ALRIGHT!" },
-  S:   { top:"#fff7c2", mid:"#ffd54a", bot:"#9a6b00", glow:"rgba(255,215,0,0.8)",    accent:"#FFD700",   label:"STYLISH!" },
-  SS:  { top:"#ffd2b8", mid:"#ff8d52", bot:"#a63900", glow:"rgba(255,107,53,0.9)",   accent:"#FF6B35",   label:"SHOWTIME!!" },
-  SSS: { top:"#ffdff0", mid:"#ff5ca6", bot:"#8e0750", glow:"rgba(255,26,140,1.0)",   accent:"#FF1A8C",   label:"SMOKIN' SEXY STYLE!!!" },
+  D:   { mid:"#e8e8e8", stroke:"#3a3a3a", glow:"rgba(255,255,255,0.40)", accent:"#bdbdbd", label:"DULL"  },
+  C:   { mid:"#7EEADF", stroke:"#0d3a36", glow:"rgba(78,205,196,0.65)",  accent:"#4ECDC4", label:"COOL"  },
+  B:   { mid:"#6aa7ff", stroke:"#0c2358", glow:"rgba(59,130,246,0.7)",   accent:"#3B82F6", label:"BRAVO" },
+  A:   { mid:"#c38bff", stroke:"#330e63", glow:"rgba(168,85,247,0.75)",  accent:"#A855F7", label:"ALRIGHT!" },
+  S:   { mid:"#ffd54a", stroke:"#3a2900", glow:"rgba(255,215,0,0.85)",   accent:"#FFD700", label:"STYLISH!" },
+  SS:  { mid:"#ff8d52", stroke:"#421400", glow:"rgba(255,107,53,0.95)",  accent:"#FF6B35", label:"SHOWTIME!!" },
+  SSS: { mid:"#ff5ca6", stroke:"#3d0024", glow:"rgba(255,26,140,1.0)",   accent:"#FF1A8C", label:"SMOKIN' SEXY STYLE!!!" },
 };
 
-function DMCRankLetter({ targetRank, size = "clamp(80px, 12vw, 140px)" }) {
-  const targetIdx = Math.max(0, RANK_ORDER.indexOf(targetRank));
-  const [idx, setIdx] = useState(0);
-  const [settled, setSettled] = useState(targetIdx === 0);
-
-  useEffect(() => {
-    if (idx >= targetIdx) { setSettled(true); return; }
-    const stepsLeft = targetIdx - idx;
-    const delay = stepsLeft > 3 ? 320 : stepsLeft > 1 ? 240 : 180;
-    const t = setTimeout(() => setIdx((i) => i + 1), delay);
-    return () => clearTimeout(t);
-  }, [idx, targetIdx]);
-
-  const current = RANK_ORDER[idx];
-  const theme = RANK_THEMES[current] ?? RANK_THEMES.D;
-  const isSSS = current === "SSS";
-
+/**
+ * RankGlyph — статичная широкая буква (используется в результате)
+ *  - stack из 2 слоёв (тень-back + main-front) + жирный stroke + scaleX 1.25
+ */
+function RankGlyph({ rank, size = "clamp(160px, 18vw, 240px)" }) {
+  const theme = RANK_THEMES[rank] ?? RANK_THEMES.D;
+  const isSSS = rank === "SSS";
   const cssVars = {
-    "--dmc-top": theme.top,
-    "--dmc-mid": theme.mid,
-    "--dmc-bot": theme.bot,
-    "--dmc-glow": theme.glow,
+    "--dmc-mid":    theme.mid,
+    "--dmc-stroke": theme.stroke,
+    "--dmc-glow":   theme.glow,
+    fontSize: size,
   };
-
   return (
-    <span
-      key={current}
-      data-testid="mock-rank-letters"
-      className={`dmc-letter ${settled ? "is-final" : ""} ${isSSS ? "dmc-letter--sss" : ""}`}
-      style={{ ...cssVars, fontSize: size }}
-    >
-      {current}
-    </span>
+    <div className={`rg-stage ${isSSS ? "rg-stage--sss" : ""}`} style={cssVars}>
+      <span className="rg-glyph rg-glyph--back" aria-hidden="true">{rank}</span>
+      <span className="rg-glyph rg-glyph--front">{rank}</span>
+    </div>
   );
 }
 
-/* ------------------------------- Result (двухколоночный layout) ------------------------------- */
+/* ------------------------------- JUDGEMENT cinematic ------------------------------- */
+/**
+ * Полноэкранный «суд». Показывается с момента, как тест завершён,
+ * скремблит букву пока летит запрос на /finish, потом плавно «защёлкивается»
+ * на финальный ранг с impact, screen-shake и волной — после чего fade-out.
+ *
+ * Никакого отдельного экрана «Джарвис считает...» — ожидание API ВКЛЮЧЕНО в
+ * саму сцену. Если ответ уже пришёл к моменту монтирования — крутит короткую
+ * драматическую увертюру (~1.6с) и сразу лочится.
+ */
+function JudgementCinematic({ targetRank, onDone }) {
+  const [glyph, setGlyph] = useState("?");
+  const [phase, setPhase] = useState("scramble"); // scramble | lock | impact | fade
+  const [statusIdx, setStatusIdx] = useState(0);
+  const startedAt = useRef(Date.now());
+  const stageRef = useRef(null);
+  const glyphRef = useRef(null);
+  const ringRef = useRef(null);
+  const sparksRef = useRef(null);
+
+  const STATUSES = [
+    "INITIATING JUDGEMENT",
+    "PARSING RESPONSES",
+    "CROSS-REF DB",
+    "WEIGHING WEAKNESSES",
+    "FORGING VERDICT",
+  ];
+
+  // ticker
+  useEffect(() => {
+    if (phase !== "scramble") return;
+    const t = setInterval(() => setStatusIdx((i) => (i + 1) % STATUSES.length), 700);
+    return () => clearInterval(t);
+  }, [phase]);
+
+  // scramble loop while waiting for targetRank
+  useEffect(() => {
+    if (phase !== "scramble") return;
+    const t = setInterval(() => {
+      setGlyph(SCRAMBLE_POOL[Math.floor(Math.random() * SCRAMBLE_POOL.length)]);
+    }, 60);
+    return () => clearInterval(t);
+  }, [phase]);
+
+  // entrance
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.fromTo(stageRef.current,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.45, ease: "power2.out" });
+      gsap.fromTo(glyphRef.current,
+        { scale: 0.6, opacity: 0, filter: "blur(20px)" },
+        { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.7, ease: "expo.out" });
+    }, stageRef);
+    return () => ctx.revert();
+  }, []);
+
+  // when targetRank arrives → minimum 1.4s of scramble for tension, then lock
+  useEffect(() => {
+    if (!targetRank) return;
+    const elapsed = Date.now() - startedAt.current;
+    const minScramble = 1400;
+    const wait = Math.max(0, minScramble - elapsed);
+
+    const lockTimer = setTimeout(() => {
+      setPhase("lock");
+      const idxTarget = Math.max(0, RANK_ORDER.indexOf(targetRank));
+      let i = 0;
+      const step = () => {
+        setGlyph(RANK_ORDER[i]);
+        // pulse on each step
+        gsap.fromTo(glyphRef.current,
+          { scale: 1.22 },
+          { scale: 1, duration: 0.22, ease: "power3.out" });
+
+        if (i >= idxTarget) {
+          // IMPACT
+          setTimeout(() => {
+            setPhase("impact");
+            // screen shake
+            gsap.to(stageRef.current, {
+              keyframes: [
+                { x: -10, y: 6, duration: 0.05 },
+                { x:  12, y: -8, duration: 0.05 },
+                { x:  -7, y: 4, duration: 0.05 },
+                { x:   5, y: -3, duration: 0.05 },
+                { x:   0, y: 0, duration: 0.05 },
+              ],
+            });
+            // glyph slam
+            gsap.fromTo(glyphRef.current,
+              { scale: 1.85, filter: "blur(0px) brightness(1.6)" },
+              { scale: 1, filter: "blur(0px) brightness(1)", duration: 1.0,
+                ease: "elastic.out(1, 0.4)" });
+            // shockwave
+            gsap.fromTo(ringRef.current,
+              { scale: 0.2, opacity: 0.95 },
+              { scale: 6, opacity: 0, duration: 1.2, ease: "power2.out" });
+            // sparks
+            if (sparksRef.current) {
+              const s = sparksRef.current.querySelectorAll(".jdg-spark");
+              s.forEach((sp, k) => {
+                const a = (k / s.length) * Math.PI * 2 + Math.random() * 0.3;
+                const d = 220 + Math.random() * 180;
+                gsap.set(sp, { x: 0, y: 0, opacity: 1, scale: 1 });
+                gsap.to(sp, {
+                  x: Math.cos(a) * d,
+                  y: Math.sin(a) * d,
+                  opacity: 0,
+                  scale: 0.2,
+                  duration: 0.9 + Math.random() * 0.5,
+                  ease: "power2.out",
+                });
+              });
+            }
+            // fade out + handoff
+            setTimeout(() => {
+              setPhase("fade");
+              gsap.to(stageRef.current, {
+                opacity: 0, duration: 0.55, ease: "power2.in",
+                onComplete: onDone,
+              });
+            }, 1100);
+          }, 250);
+          return;
+        }
+        i++;
+        const remaining = idxTarget - i + 1;
+        const delay = remaining > 3 ? 130 : remaining > 1 ? 220 : 360;
+        setTimeout(step, delay);
+      };
+      step();
+    }, wait);
+
+    return () => clearTimeout(lockTimer);
+  }, [targetRank, onDone]);
+
+  const theme = RANK_THEMES[targetRank] ?? RANK_THEMES.D;
+  const cssVars = {
+    "--dmc-mid":    theme.mid,
+    "--dmc-stroke": theme.stroke,
+    "--dmc-glow":   theme.glow,
+    "--jdg-accent": theme.accent,
+  };
+  const isSSS = targetRank === "SSS" && phase !== "scramble";
+
+  return (
+    <div ref={stageRef} className="jdg-overlay" style={cssVars} data-testid="judgement-overlay">
+      <div className="jdg-grid" aria-hidden="true" />
+      <div className="jdg-vignette" aria-hidden="true" />
+
+      <div className="jdg-top-line">
+        <span>JARVIS</span>
+        <span className="jdg-blink">●</span>
+        <span>JUDGEMENT_PROTOCOL.exe</span>
+      </div>
+
+      <div className="jdg-center">
+        <span ref={ringRef} className="jdg-ring" aria-hidden="true" />
+        <span ref={sparksRef} className="jdg-sparks" aria-hidden="true">
+          {Array.from({ length: 22 }).map((_, i) => (
+            <span key={i} className="jdg-spark" />
+          ))}
+        </span>
+
+        <div ref={glyphRef} className={`rg-stage jdg-glyph ${isSSS ? "rg-stage--sss" : ""}`}>
+          <span className="rg-glyph rg-glyph--back" aria-hidden="true">{glyph}</span>
+          <span className="rg-glyph rg-glyph--front">{glyph}</span>
+        </div>
+
+        {phase === "scramble" && (
+          <div className="jdg-status">
+            <span className="jdg-bracket">[</span>
+            <span className="jdg-status-text">{STATUSES[statusIdx]}</span>
+            <span className="jdg-bracket">]</span>
+          </div>
+        )}
+        {phase !== "scramble" && (
+          <div className="jdg-status jdg-status--locked">
+            <span>RANK ACQUIRED</span>
+          </div>
+        )}
+      </div>
+
+      <div className="jdg-bottom-line">
+        <span>{phase === "scramble" ? "ANALYZING…" : "VERDICT LOCKED"}</span>
+        <span className="jdg-bar"><span className="jdg-bar-fill" /></span>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------- Result ------------------------------- */
+
+function Tag({ color, children }) {
+  return (
+    <span style={{
+      display: "inline-block", padding: "4px 10px",
+      border: `2px solid ${color}`, color, fontSize: 11,
+      letterSpacing: "0.1em", fontWeight: 800,
+    }}>{children}</span>
+  );
+}
 
 function ResultStage({ session, onRestart }) {
   const r = session.finalReport;
   if (!r) return null;
-
   const theme = RANK_THEMES[r.rank] ?? RANK_THEMES.D;
   const passed = r.verdict === "passed";
 
-  return (
-    <div className="mock-root" style={{ maxWidth: 1200, margin: "0 auto", padding: `${PAGE_TOP} 24px 40px` }}>
-      <Crumb stage="result" />
+  const fadeUp = {
+    hidden: { opacity: 0, y: 20 },
+    show: (i = 0) => ({
+      opacity: 1, y: 0,
+      transition: { duration: 0.5, ease: [0.2, 0.8, 0.2, 1], delay: 0.05 + i * 0.08 },
+    }),
+  };
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 32, alignItems: "start" }}>
-        {/* ЛЕВАЯ КОЛОНКА — фидбек */}
+  return (
+    <motion.div
+      key="result"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="mock-root"
+      style={{ maxWidth: 1200, margin: "0 auto", padding: `${PAGE_TOP} 24px 40px` }}
+    >
+      <Crumb stage="result" />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 32, alignItems: "start" }}>
         <div>
-          <div style={{ ...brBox, padding: 24, marginBottom: 24 }}>
+          <motion.div variants={fadeUp} initial="hidden" animate="show" custom={0}
+            style={{ ...brBox, padding: 24, marginBottom: 24 }}>
             <div style={{ fontSize: 11, letterSpacing: "0.15em", opacity: 0.6, marginBottom: 10 }}>
               ФИДБЕК ОТ ДЖАРВИСА
             </div>
@@ -639,10 +842,11 @@ function ResultStage({ session, onRestart }) {
                 {r.weaknesses?.map((w, i) => <Tag key={`w${i}`} color="#ff5b00">- {w}</Tag>)}
               </div>
             )}
-          </div>
+          </motion.div>
 
           {(session.coding?.length > 0) && (
-            <div style={{ ...brBox, padding: 24, marginBottom: 24 }}>
+            <motion.div variants={fadeUp} initial="hidden" animate="show" custom={1}
+              style={{ ...brBox, padding: 24, marginBottom: 24 }}>
               <div style={{ fontSize: 11, letterSpacing: "0.15em", opacity: 0.6, marginBottom: 14 }}>ЛАЙВ-КОДИНГ</div>
               {session.coding.map((c, i) => {
                 const ok = c.testsTotal > 0 && c.testsPassed === c.testsTotal;
@@ -663,53 +867,53 @@ function ResultStage({ session, onRestart }) {
                   </div>
                 );
               })}
-            </div>
+            </motion.div>
           )}
 
           {r.toImprove?.length > 0 && (
-            <div style={{ ...brBox, padding: 24, marginBottom: 24 }}>
+            <motion.div variants={fadeUp} initial="hidden" animate="show" custom={2}
+              style={{ ...brBox, padding: 24, marginBottom: 24 }}>
               <div style={{ fontSize: 11, letterSpacing: "0.15em", opacity: 0.6, marginBottom: 14 }}>
                 ЧТО ПОДТЯНУТЬ В ПЕРВУЮ ОЧЕРЕДЬ
               </div>
               <ol style={{ margin: 0, paddingLeft: 20, fontSize: 15, lineHeight: 1.6 }}>
                 {r.toImprove.map((t, i) => <li key={i} style={{ marginBottom: 6 }}>{t}</li>)}
               </ol>
-            </div>
+            </motion.div>
           )}
 
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <motion.div variants={fadeUp} initial="hidden" animate="show" custom={3}
+            style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <button data-testid="mock-restart-btn" onClick={onRestart} style={btnPrimary}>ПРОЙТИ ЕЩЁ РАЗ ↗</button>
             <Link to="/tests" style={{ ...btnGhost, textDecoration: "none", display: "inline-block" }}>К ТЕСТАМ</Link>
-          </div>
+          </motion.div>
         </div>
 
-        {/* ПРАВАЯ КОЛОНКА — просто буква + инфо, без карточки */}
-        <div style={{ position: "sticky", top: 120, display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 20 }}>
-          <DMCRankLetter targetRank={r.rank} size="clamp(100px, 14vw, 160px)" />
+        <div style={{ position: "sticky", top: 120, display: "flex", flexDirection: "column",
+          alignItems: "center", paddingTop: 12 }}>
+          <RankGlyph rank={r.rank} size="clamp(160px, 18vw, 240px)" />
+          <div data-testid="mock-rank-letters" style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}>{r.rank}</div>
 
           <div style={{
-            fontFamily: "'Archivo Black', sans-serif",
-            fontSize: "clamp(18px, 2.5vw, 26px)",
+            fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+            fontSize: "clamp(16px, 2vw, 22px)",
+            fontWeight: 800,
             color: theme.accent,
-            letterSpacing: "0.08em",
-            marginTop: 18,
+            letterSpacing: "0.12em",
+            marginTop: 24,
             textTransform: "uppercase",
+            textAlign: "center",
           }}>
             {r.rankLabel || theme.label}
           </div>
 
-          <div style={{
-            fontSize: 10, letterSpacing: "0.25em", opacity: 0.5, marginTop: 8,
-          }}>
+          <div style={{ fontSize: 10, letterSpacing: "0.25em", marginTop: 10, opacity: 0.55 }}>
             {session.directionLabel?.toUpperCase?.()} · {session.grade?.toUpperCase?.()}
           </div>
 
           <div style={{ marginTop: 24 }}>
-            <span
-              data-testid="mock-final-score"
-              className="display"
-              style={{ fontSize: "clamp(48px, 7vw, 72px)", lineHeight: 0.9, color: "var(--fg)" }}
-            >
+            <span data-testid="mock-final-score" className="display"
+              style={{ fontSize: "clamp(48px, 7vw, 72px)", lineHeight: 0.9, color: "var(--fg)" }}>
               {r.totalScore}
             </span>
             <span className="display" style={{ fontSize: 18, opacity: 0.5, marginLeft: 4 }}>/100</span>
@@ -724,9 +928,10 @@ function ResultStage({ session, onRestart }) {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
+
 /* ------------------------------- Page root ------------------------------- */
 
 export default function MockInterview() {
@@ -735,12 +940,21 @@ export default function MockInterview() {
   const [meta, setMeta] = useState({ directions: [], grades: [] });
   const [finalizing, setFinalizing] = useState(false);
   const [confirmAbort, setConfirmAbort] = useState(false);
+  const [cinematicDone, setCinematicDone] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem(LS_KEY);
     if (saved) {
       apiFetch(`${API}/api/mock/session/${saved}`)
-        .then((s) => { if (s?.id) setSession(s); else localStorage.removeItem(LS_KEY); })
+        .then((s) => {
+          if (s?.id) {
+            setSession(s);
+            // если сессия уже завершена и отчёт есть — кинематик не нужен
+            if ((s.stage === "finished" || s.stage === "aborted") && s.finalReport) {
+              setCinematicDone(true);
+            }
+          } else localStorage.removeItem(LS_KEY);
+        })
         .catch(() => localStorage.removeItem(LS_KEY));
     }
     apiFetch(`${API}/api/mock/rate-limit`).then(setRateLimit).catch(() => setRateLimit(null));
@@ -786,6 +1000,7 @@ export default function MockInterview() {
   const restart = () => {
     localStorage.removeItem(LS_KEY);
     setSession(null);
+    setCinematicDone(false);
     apiFetch(`${API}/api/mock/rate-limit`).then(setRateLimit).catch(() => {});
   };
 
@@ -805,27 +1020,33 @@ export default function MockInterview() {
 
   if (!session) return <Setup onStart={setSession} rateLimit={rateLimit} meta={meta} />;
 
-  if (session.stage === "finished" || session.stage === "aborted") {
-    if (finalizing || !session.finalReport) {
-      return (
-        <div style={{ maxWidth: 600, margin: "0 auto", padding: `${PAGE_TOP} 24px 32px`, textAlign: "center" }}>
-          <Crumb stage="result" />
-          <div style={{ ...brBox, padding: 32, boxShadow: "8px 8px 0 var(--accent)" }}>
-            <div style={{ fontSize: 18, fontWeight: 900, letterSpacing: "0.05em", marginBottom: 10 }}>
-              ДЖАРВИС СВОДИТ ИТОГ...
-            </div>
-            <div style={{ opacity: 0.7, fontSize: 14 }}>5–15 секунд.</div>
-          </div>
-        </div>
-      );
-    }
-    return <ResultStage session={session} onRestart={restart} />;
-  }
+  const isFinishedStage = session.stage === "finished" || session.stage === "aborted";
+  const showCinematic = isFinishedStage && !cinematicDone;
+  const targetRank = session.finalReport?.rank;
 
   return (
     <>
-      {session.stage === "qa" && (<ChatStage session={session} onUpdate={setSession} onAbort={askAbort} />)}
-      {session.stage === "coding" && (<CodingStage session={session} onUpdate={setSession} onAbort={askAbort} />)}
+      {!isFinishedStage && (
+        <>
+          {session.stage === "qa" && (<ChatStage session={session} onUpdate={setSession} onAbort={askAbort} />)}
+          {session.stage === "coding" && (<CodingStage session={session} onUpdate={setSession} onAbort={askAbort} />)}
+        </>
+      )}
+
+      {isFinishedStage && cinematicDone && session.finalReport && (
+        <ResultStage session={session} onRestart={restart} />
+      )}
+
+      <AnimatePresence>
+        {showCinematic && (
+          <JudgementCinematic
+            key="cinematic"
+            targetRank={targetRank}
+            onDone={() => setCinematicDone(true)}
+          />
+        )}
+      </AnimatePresence>
+
       {confirmAbort && (<ConfirmModal onCancel={() => setConfirmAbort(false)} onConfirm={doAbort} />)}
     </>
   );

@@ -247,108 +247,242 @@ h1, h2, h3, h4, h5, h6, p { margin: 0; color: var(--fg); }
 [data-testid="ai-chat"] { contain: layout paint; transform: none !important; filter: none !important; }
 
 /* ================================================================
-   DMC RANK — Bebas Neue + анимации
+   RANK GLYPH — широкая жирная буква (стэк из 2 слоёв + stroke + scaleX)
    ================================================================ */
 
-.dmc-letter {
-  font-family: 'Bebas Neue', 'Archivo Black', Impact, sans-serif;
-  line-height: 0.82;
-  letter-spacing: 0.02em;
-  display: inline-block;
-  transform-origin: 50% 55%;
-  background: linear-gradient(180deg,
-    var(--dmc-top, #ffffff) 0%,
-    var(--dmc-mid, #d8d8d8) 45%,
-    var(--dmc-bot, #6a6a6a) 100%);
+.rg-stage {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 1.4em;
+  height: 1.05em;
+  line-height: 1;
+  isolation: isolate;
+  transform: scaleX(1.25);
+  transform-origin: center;
+  filter: drop-shadow(0 0 26px var(--dmc-glow, rgba(255,255,255,0.45)));
+}
+
+.rg-glyph {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: 'JetBrains Mono', 'IBM Plex Mono', 'Fira Code', ui-monospace, monospace;
+  font-weight: 900;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* «Тень» — широкий тёмный слой за основной буквой = объём */
+.rg-glyph--back {
+  color: var(--dmc-stroke, #000);
+  -webkit-text-stroke: 0.08em var(--dmc-stroke, #000);
+  transform: translate(0.04em, 0.06em);
+  filter: blur(1.5px);
+  opacity: 0.95;
+  z-index: 1;
+}
+
+/* Основная буква — толстый stroke вокруг fill, плюс лёгкий внутренний градиент */
+.rg-glyph--front {
+  color: var(--dmc-mid, #ffffff);
+  -webkit-text-stroke: 0.07em var(--dmc-mid, #ffffff);
+  text-shadow:
+    0 0 1px var(--dmc-mid),
+    0 0 18px var(--dmc-glow);
+  z-index: 2;
+}
+
+/* SSS — радужный fill на фронте */
+.rg-stage--sss .rg-glyph--front {
+  color: transparent;
+  background: linear-gradient(90deg, #FF1A8C 0%, #FFD700 25%, #00E5FF 50%, #A855F7 75%, #FF1A8C 100%);
+  background-size: 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  color: transparent;
-  filter:
-    drop-shadow(0 0 18px var(--dmc-glow, rgba(255,255,255,0.45)))
-    drop-shadow(3px 4px 0 rgba(0,0,0,0.8));
-  animation: dmcLetterPop 420ms cubic-bezier(.2,1.2,.4,1) both;
-  will-change: transform, filter;
-  user-select: none;
+  -webkit-text-stroke: 0.06em #ff1a8c;
+  animation: rgRainbow 4s linear infinite;
 }
-
-.dmc-letter.dmc-letter--sss {
-  background: linear-gradient(90deg, #FF1A8C 0%, #FFD700 25%, #00E5FF 50%, #A855F7 75%, #FF1A8C 100%);
-  background-size: 200% 200%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  animation: dmcLetterPop 420ms cubic-bezier(.2,1.2,.4,1) both,
-             dmcRainbow 4s linear infinite;
-}
-
-.dmc-letter.is-final {
-  animation:
-    dmcLetterPop 420ms cubic-bezier(.2,1.2,.4,1) both,
-    dmcBreath 2.4s ease-in-out 420ms infinite,
-    dmcMicroTwitch 3.2s steps(1) 1800ms infinite;
-}
-.dmc-letter.is-final.dmc-letter--sss {
-  animation:
-    dmcLetterPop 420ms cubic-bezier(.2,1.2,.4,1) both,
-    dmcRainbow 4s linear infinite,
-    dmcBreath 2s ease-in-out 420ms infinite,
-    dmcMicroTwitch 2.6s steps(1) 1600ms infinite;
-}
-
-@keyframes dmcLetterPop {
-  0%   { opacity: 0;   transform: scale(0.4) translateY(22px) rotate(-4deg) skewX(-4deg); filter: blur(12px) drop-shadow(0 0 30px var(--dmc-glow)); }
-  45%  { opacity: 1;   transform: scale(1.18) translateY(-6px) rotate(2deg) skewX(-6deg); filter: blur(0) drop-shadow(0 0 38px var(--dmc-glow)); }
-  70%  { transform: scale(0.96) translateY(2px) rotate(-1deg) skewX(-5deg); }
-  100% { opacity: 1;   transform: scale(1) translateY(0) rotate(0) skewX(-5deg); filter: blur(0) drop-shadow(0 0 18px var(--dmc-glow)) drop-shadow(3px 4px 0 rgba(0,0,0,0.8)); }
-}
-
-@keyframes dmcBreath {
-  0%, 100% { filter: drop-shadow(0 0 18px var(--dmc-glow)) drop-shadow(3px 4px 0 rgba(0,0,0,0.8)); transform: scale(1) skewX(-5deg); }
-  50%      { filter: drop-shadow(0 0 32px var(--dmc-glow)) drop-shadow(3px 4px 0 rgba(0,0,0,0.8)); transform: scale(1.02) skewX(-5deg); }
-}
-
-@keyframes dmcMicroTwitch {
-  0%, 97%, 100% { transform: scale(1) translate(0, 0) skewX(-5deg); }
-  98%           { transform: scale(1.01) translate(-1px, 1px) skewX(-5deg); }
-  99%           { transform: scale(1) translate(1px, -1px) skewX(-5deg); }
-}
-
-@keyframes dmcRainbow {
+@keyframes rgRainbow {
   0%   { background-position: 0% 50%; }
   100% { background-position: 200% 50%; }
 }
 
-/* Карточка ранга (правая колонка) */
-.dmc-rank-card {
-  position: sticky;
-  top: 120px;
+/* ================================================================
+   JUDGEMENT cinematic — фуллскрин-сцена, заменяет «Джарвис считает...»
+   ================================================================ */
+
+.jdg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.04) 0%, #000 60%),
+    #000;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+  color: var(--fg);
+  will-change: transform, opacity;
+}
+
+.jdg-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
+  background-size: 48px 48px, 48px 48px;
+  mask-image: radial-gradient(ellipse at center, #000 25%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 25%, transparent 75%);
+  animation: jdgGridSlide 8s linear infinite;
+}
+@keyframes jdgGridSlide {
+  0%   { background-position: 0 0, 0 0; }
+  100% { background-position: 48px 48px, 48px 48px; }
+}
+
+.jdg-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(180deg,
+      rgba(255,255,255,0.025) 0 2px,
+      transparent 2px 4px),
+    radial-gradient(ellipse at 50% 50%,
+      transparent 30%,
+      rgba(0,0,0,0.85) 90%);
+  mix-blend-mode: overlay;
+}
+
+.jdg-top-line,
+.jdg-bottom-line {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 22px 28px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  opacity: 0.7;
+}
+.jdg-top-line { border-bottom: 1px solid rgba(255,255,255,0.08); }
+.jdg-bottom-line {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  justify-content: space-between;
+}
+.jdg-blink {
+  color: var(--jdg-accent, var(--accent));
+  animation: jdgBlink 1s steps(1) infinite;
+}
+@keyframes jdgBlink {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0.15; }
+}
+
+.jdg-bar {
+  position: relative;
+  display: inline-block;
+  width: 240px;
+  height: 3px;
+  background: rgba(255,255,255,0.08);
+  overflow: hidden;
+}
+.jdg-bar-fill {
+  position: absolute;
+  top: 0; left: -40%;
+  width: 40%; height: 100%;
+  background: linear-gradient(90deg, transparent, var(--jdg-accent, var(--accent)), transparent);
+  animation: jdgSweep 1.4s cubic-bezier(.55,.1,.25,1) infinite;
+}
+@keyframes jdgSweep {
+  0% { left: -40%; } 100% { left: 100%; }
+}
+
+.jdg-center {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 24px 32px;
-  border: 2px solid var(--fg);
-  background:
-    radial-gradient(ellipse at 50% 30%, var(--dmc-card-bg, rgba(255,255,255,0.04)) 0%, transparent 70%),
-    var(--bg);
-  box-shadow: 8px 8px 0 var(--dmc-accent, var(--accent));
-  overflow: visible;
-  animation: dmcCardIn 560ms cubic-bezier(.2,.9,.25,1) both;
+  gap: 32px;
+  padding: 20px;
 }
 
-@keyframes dmcCardIn {
-  0%   { opacity: 0; transform: translateY(30px) scale(0.94); }
-  60%  { opacity: 1; transform: translateY(-4px) scale(1.01); }
-  100% { opacity: 1; transform: translateY(0)    scale(1); }
+.jdg-glyph {
+  font-size: clamp(220px, 32vw, 480px);
+  filter: drop-shadow(0 0 60px var(--dmc-glow, rgba(255,255,255,0.5)));
 }
 
-/* Чат-скроллер — фикс высоты */
+.jdg-status {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  letter-spacing: 0.3em;
+  display: flex;
+  gap: 12px;
+  color: var(--jdg-accent, var(--accent));
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.jdg-status--locked {
+  color: var(--jdg-accent, var(--accent));
+  font-size: 16px;
+  letter-spacing: 0.35em;
+  animation: jdgLockPulse 1.2s ease-in-out infinite;
+}
+@keyframes jdgLockPulse {
+  0%, 100% { opacity: 1; transform: translateY(0); }
+  50%      { opacity: 0.6; transform: translateY(-2px); }
+}
+.jdg-bracket { color: rgba(255,255,255,0.4); }
+
+.jdg-ring {
+  position: absolute;
+  width: 1em;
+  height: 1em;
+  border-radius: 50%;
+  border: 4px solid var(--jdg-accent, var(--accent));
+  box-shadow: 0 0 40px var(--jdg-accent, var(--accent));
+  font-size: clamp(220px, 32vw, 480px);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.jdg-sparks {
+  position: absolute;
+  width: 0; height: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.jdg-spark {
+  position: absolute;
+  left: 0; top: 0;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--jdg-accent, var(--accent));
+  box-shadow: 0 0 14px var(--jdg-accent, var(--accent));
+  opacity: 0;
+  transform: translate(-50%, -50%);
+}
+
+/* ================================================================
+   Чат-скроллер — фикс высоты
+   ================================================================ */
 .mock-chat-shell {
   display: flex;
   flex-direction: column;
-  height: 70vh;
-  min-height: 480px;
-  max-height: 780px;
+  height: clamp(420px, calc(100vh - 320px), 680px);
 }
 .mock-chat-scroller {
   flex: 1 1 auto;
@@ -356,5 +490,3 @@ h1, h2, h3, h4, h5, h6, p { margin: 0; color: var(--fg); }
   overflow-y: auto;
   padding: 24px;
 }
-
-.mock-root { overflow: visible; }
