@@ -641,32 +641,31 @@ function ResultStage({ session, onRestart }) {
             ИТОГ · {session.directionLabel} · {session.grade}{session.stage === "aborted" ? " · ПРЕРВАНО" : ""}
           </div>
 
-          <div data-testid="mock-rank-letters" style={{
-            display: "flex", gap: r.rank.length === 3 ? 4 : 0,
-            filter: `drop-shadow(0 0 30px ${theme.glow})`,
-          }}>
-            {r.rank.split("").map((ch, i) => (
-              <span key={i} className={sssMode ? "ppRankSSS" : "ppRank"} style={{
-                color: theme.color,
+        <div data-testid="mock-rank-letters" style={{
+          display: "flex", gap: r.rank.length === 3 ? 6 : 0,
+          filter: `drop-shadow(0 0 30px ${theme.glow}) drop-shadow(4px 6px 0 #000)`,
+        }}>
+          {r.rank.split("").map((ch, i) => (
+            <span
+              key={i}
+              className={`dmc-rank-letter ${sssMode ? "dmc-rank-letter--sss" : ""}`}
+              style={{
+                color: sssMode ? undefined : theme.color,
                 animationDelay: `${0.18 + i * 0.18}s`,
-                fontFamily: "'Bebas Neue', 'Oswald', Impact, sans-serif",
-                fontSize: "clamp(140px, 20vw, 260px)",
-                fontWeight: 900, lineHeight: 0.9, letterSpacing: "-0.02em",
-                background: sssMode
-                  ? "linear-gradient(90deg,#FF1A8C 0%, #FFD700 25%, #00E5FF 50%, #A855F7 75%, #FF1A8C 100%)"
-                  : "transparent",
-                WebkitBackgroundClip: sssMode ? "text" : undefined,
-                WebkitTextFillColor: sssMode ? "transparent" : undefined,
-                backgroundSize: sssMode ? "200% 200%" : undefined,
+                fontSize: "clamp(160px, 22vw, 280px)",
                 textShadow: sssMode
-                  ? `0 0 24px ${theme.glow}`
-                  : `0 0 24px ${theme.glow}, 4px 4px 0 #000`,
-              }}>{ch}</span>
-            ))}
-          </div>
+                  ? `0 0 28px ${theme.glow}`
+                  : `0 0 22px ${theme.glow}, 5px 5px 0 #000, -2px -2px 0 rgba(255,255,255,0.15)`,
+              }}
+            >
+              {ch}
+            </span>
+          ))}
+        </div>
 
           <div style={{
-            fontFamily: "'Bebas Neue', 'Oswald', Impact, sans-serif",
+            fontFamily: "'Black Ops One', 'Big Shoulders Stencil Display', Impact, sans-serif",
+            fontStyle: "italic",
             fontSize: "clamp(22px, 3vw, 38px)", letterSpacing: "0.1em",
             color: theme.color, marginTop: -8,
             animation: "ppFadeUp 0.6s ease-out 1.2s both",
@@ -766,6 +765,32 @@ function ResultStage({ session, onRestart }) {
 function DMCStyles() {
   return (
     <style>{`
+      /* Devil May Cry-стайл шрифт: Black Ops One + Bungee Inline (для SSS) */
+      @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Bungee+Inline&family=Big+Shoulders+Stencil+Display:wght@900&display=swap');
+
+      .dmc-rank-letter {
+        display: inline-block;
+        opacity: 0;
+        font-family: 'Black Ops One', 'Big Shoulders Stencil Display', Impact, sans-serif;
+        font-style: italic;
+        font-weight: 900;
+        line-height: 0.85;
+        letter-spacing: -0.02em;
+        transform-origin: 50% 60%;
+        animation: ppRankPop 0.7s cubic-bezier(0.2, 1.6, 0.4, 1) forwards;
+      }
+      .dmc-rank-letter--sss {
+        font-family: 'Bungee Inline', 'Black Ops One', Impact, sans-serif;
+        background: linear-gradient(90deg, #FF1A8C 0%, #FFD700 25%, #00E5FF 50%, #A855F7 75%, #FF1A8C 100%);
+        background-size: 200% 200%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+        animation: ppRankPop 0.7s cubic-bezier(0.2, 1.6, 0.4, 1) forwards,
+                   ppRainbow 4s linear infinite;
+      }
+
       @keyframes ppShake {
         0%, 100% { transform: translate(0, 0); }
         15% { transform: translate(-6px, 4px); }
@@ -780,12 +805,10 @@ function DMCStyles() {
         100% { opacity: 1; transform: translateY(0); }
       }
       @keyframes ppRankPop {
-        0%   { opacity: 0; transform: translateY(40px) scale(0.7) rotate(-6deg); filter: blur(12px); }
-        50%  { opacity: 1; transform: translateY(-8px) scale(1.12) rotate(2deg); filter: blur(0); }
-        100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); filter: blur(0); }
+        0%   { opacity: 0; transform: translateY(40px) scale(0.7) rotate(-8deg) skewX(-6deg); filter: blur(12px); }
+        50%  { opacity: 1; transform: translateY(-10px) scale(1.18) rotate(2deg) skewX(-10deg); filter: blur(0); }
+        100% { opacity: 1; transform: translateY(0)   scale(1)    rotate(0)    skewX(-8deg); filter: blur(0); }
       }
-      .ppRank   { display: inline-block; opacity: 0; animation: ppRankPop 0.7s cubic-bezier(0.2,1.6,0.4,1) forwards; }
-      .ppRankSSS { display: inline-block; opacity: 0; animation: ppRankPop 0.7s cubic-bezier(0.2,1.6,0.4,1) forwards, ppRainbow 4s linear infinite; }
       @keyframes ppRainbow {
         0%   { background-position: 0%   50%; }
         100% { background-position: 200% 50%; }

@@ -4,11 +4,18 @@ import { Link, useLocation } from "react-router-dom";
 export default function NavBar({ theme, onToggleTheme }) {
   const { pathname } = useLocation();
   const [hidden, setHidden] = useState(false);
-  const lastY = useRef(0); const peekTimer = useRef(null); const isHovered = useRef(false);
+  const lastY = useRef(0);
+  const peekTimer = useRef(null);
+  const isHovered = useRef(false);
+
+  // Сколько ждать после ухода курсора с верхней зоны, прежде чем спрятать.
+  // Было 1800ms — стало 500ms. Хочешь ещё быстрее — поставь 250.
+  const PEEK_HIDE_DELAY = 500;
 
   useEffect(() => {
     const onScroll = () => {
-      const y = window.scrollY; const delta = y - lastY.current;
+      const y = window.scrollY;
+      const delta = y - lastY.current;
       if (isHovered.current) setHidden(false);
       else if (y < 60) setHidden(false);
       else if (delta > 6) setHidden(true);
@@ -19,31 +26,44 @@ export default function NavBar({ theme, onToggleTheme }) {
       if (e.clientY < 90) {
         setHidden(false);
         clearTimeout(peekTimer.current);
-        peekTimer.current = setTimeout(() => { if (window.scrollY > 60 && !isHovered.current) setHidden(true); }, 1800);
+        peekTimer.current = setTimeout(() => {
+          if (window.scrollY > 60 && !isHovered.current) setHidden(true);
+        }, PEEK_HIDE_DELAY);
       }
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("mousemove", onMove);
-    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("mousemove", onMove); clearTimeout(peekTimer.current); };
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("mousemove", onMove);
+      clearTimeout(peekTimer.current);
+    };
   }, []);
 
-    const links = [
+  const links = [
     { to: "/directions", label: "НАПРАВЛЕНИЯ" },
     { to: "/recordings", label: "ВИДЕО" },
     { to: "/tests",      label: "ТЕСТЫ" },
-    ];
+  ];
 
   return (
     <header data-testid="nav-bar"
-      onMouseEnter={() => { isHovered.current = true; setHidden(false); }}
-      onMouseLeave={() => { isHovered.current = false; }}
+      onMouseEnter={() => { isHovered.current = true; setHidden(false); clearTimeout(peekTimer.current); }}
+      onMouseLeave={() => {
+        isHovered.current = false;
+        clearTimeout(peekTimer.current);
+        // Если уже проскроллено вниз — прячем почти сразу
+        peekTimer.current = setTimeout(() => {
+          if (window.scrollY > 60 && !isHovered.current) setHidden(true);
+        }, 250);
+      }}
       style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
         padding: "18px 28px", display: "flex", alignItems: "center", justifyContent: "space-between",
         background: "var(--nav-bg)", backdropFilter: "blur(10px)",
         borderBottom: "2px solid var(--line)",
         transform: hidden ? "translateY(-110%)" : "translateY(0)",
-        transition: "transform 380ms cubic-bezier(.2,.8,.2,1), background 300ms ease",
+        transition: "transform 320ms cubic-bezier(.2,.8,.2,1), background 300ms ease",
       }}>
       <Link to="/" data-testid="nav-logo" style={{ display: "inline-flex", alignItems: "center", gap: 12, color: "var(--fg)" }}>
         <div style={{ width: 32, height: 32, background: "var(--accent)", display: "grid", placeItems: "center", border: "2px solid var(--fg)", boxShadow: "3px 3px 0 var(--fg)", fontFamily: "Archivo Black", color: "#000", fontSize: 18 }}>P</div>

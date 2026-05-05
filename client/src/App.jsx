@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-ro
 import Lenis from "lenis";
 import "./App.css";
 import BrutalScene from "./components/BrutalScene.jsx";
-import LoadingScreen from "./components/LoadingScreen.jsx";
 import NavBar from "./components/NavBar.jsx";
 import Footer from "./components/Footer.jsx";
 import Landing from "./pages/Landing.jsx";
@@ -15,6 +14,7 @@ import Quiz from "./pages/Quiz.jsx";
 import QuizDirection from "./pages/QuizDirection.jsx";
 import { DocsPage, PrivacyPage, TermsPage, StatusPage, ContactPage } from "./pages/Legal.jsx";
 import MockInterview from "./pages/MockInterview.jsx";
+
 /* ===== ПЕРЕХОДЫ МЕЖДУ СТРАНИЦАМИ (мягкий fade) ===== */
 const PAGE_TRANSITION_CSS = `
 @keyframes ppPageIn {
@@ -45,13 +45,13 @@ function AnimatedRoutes() {
         <Route path="/tests" element={<Tests />} />
         <Route path="/tests/quiz" element={<Quiz />} />
         <Route path="/quiz-direction" element={<QuizDirection />} />
+        <Route path="/mock" element={<MockInterview />} />
         <Route path="/docs" element={<DocsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/status" element={<StatusPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="*" element={<Landing />} />
-        <Route path="/mock" element={<MockInterview />} />
       </Routes>
     </div>
   );
@@ -59,13 +59,11 @@ function AnimatedRoutes() {
 
 function ScrollToTop() {
   const { pathname, hash } = useLocation();
-
   useEffect(() => {
     if (hash) return;
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     if (window.__lenis) window.__lenis.scrollTo(0, { immediate: true });
   }, [pathname, hash]);
-
   return null;
 }
 
@@ -73,9 +71,7 @@ function DirectionTestPopup({ onClose }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === "Escape") onClose();
-    };
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
@@ -85,75 +81,38 @@ function DirectionTestPopup({ onClose }) {
     onClose();
     navigate("/quiz-direction");
   };
-
   const decline = () => {
     localStorage.setItem("pp-dir-test-seen", "1");
     onClose();
   };
 
   return (
-    <div
-      onClick={decline}
-      data-testid="dir-test-popup"
+    <div onClick={decline} data-testid="dir-test-popup"
       style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 9998,
-        background: "rgba(0,0,0,0.78)",
-        backdropFilter: "blur(4px)",
-        display: "grid",
-        placeItems: "center",
-        padding: 20,
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
+        position: "fixed", inset: 0, zIndex: 9998,
+        background: "rgba(0,0,0,0.78)", backdropFilter: "blur(4px)",
+        display: "grid", placeItems: "center", padding: 20,
+      }}>
+      <div onClick={(e) => e.stopPropagation()}
         style={{
-          width: "min(560px, 100%)",
-          background: "var(--bg)",
-          border: "2px solid var(--fg)",
-          boxShadow: "10px 10px 0 var(--accent)",
+          width: "min(560px, 100%)", background: "var(--bg)",
+          border: "2px solid var(--fg)", boxShadow: "10px 10px 0 var(--accent)",
           padding: 36,
-        }}
-      >
-        <div
-          className="mono"
-          style={{
-            fontSize: 11,
-            letterSpacing: "0.22em",
-            color: "var(--accent-ink)",
-          }}
-        >
+        }}>
+        <div className="mono" style={{ fontSize: 11, letterSpacing: "0.22em", color: "var(--accent-ink)" }}>
           // ТЕСТ НА НАПРАВЛЕНИЕ
         </div>
-
-        <div
-          className="display"
-          style={{ fontSize: 48, marginTop: 14, lineHeight: 0.95 }}
-        >
+        <div className="display" style={{ fontSize: 48, marginTop: 14, lineHeight: 0.95 }}>
           НЕ ЗНАЕШЬ,<br />
           <span style={{ color: "var(--accent-ink)" }}>С ЧЕГО НАЧАТЬ?</span>
         </div>
-
-        <p
-          style={{
-            marginTop: 18,
-            color: "var(--fg-dim)",
-            fontSize: 14,
-            lineHeight: 1.6,
-          }}
-        >
+        <p style={{ marginTop: 18, color: "var(--fg-dim)", fontSize: 14, lineHeight: 1.6 }}>
           Ответь на 8 простых вопросов — подберём IT-направление под твой склад ума.
           Никаких тяжёлых терминов, честно. 2 минуты.
         </p>
-
         <div style={{ display: "flex", gap: 10, marginTop: 24, flexWrap: "wrap" }}>
-          <button onClick={accept} className="btn-brutal">
-            ПРОЙТИ ТЕСТ ↗
-          </button>
-          <button onClick={decline} className="btn-ghost">
-            ПОЗЖЕ
-          </button>
+          <button onClick={accept} className="btn-brutal">ПРОЙТИ ТЕСТ ↗</button>
+          <button onClick={decline} className="btn-ghost">ПОЗЖЕ</button>
         </div>
       </div>
     </div>
@@ -161,15 +120,6 @@ function DirectionTestPopup({ onClose }) {
 }
 
 function App() {
-  const [booted, setBooted] = useState(() => {
-    const last = parseInt(localStorage.getItem("pp-last-visit") || "0", 10);
-    return Date.now() - last < 5 * 60 * 1000;
-  });
-
-  useEffect(() => {
-    if (booted) localStorage.setItem("pp-last-visit", String(Date.now()));
-  }, [booted]);
-
   const [theme, setTheme] = useState(() => localStorage.getItem("pp-theme") || "dark");
   const [showDirPopup, setShowDirPopup] = useState(false);
 
@@ -185,31 +135,24 @@ function App() {
     setTimeout(() => root.classList.remove("theme-switching"), 420);
   };
 
+  // popup «выбор направления» — без зависимости от загрузочного экрана
   useEffect(() => {
-    if (!booted) return;
     if (localStorage.getItem("pp-dir-test-seen") === "1") return;
-
     const t = setTimeout(() => setShowDirPopup(true), 5000);
     return () => clearTimeout(t);
-  }, [booted]);
+  }, []);
 
+  // smooth-скролл Lenis включаем сразу
   useEffect(() => {
-    if (!booted) return;
-
     const lenis = new Lenis({
       duration: 1.15,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
     });
-
     window.__lenis = lenis;
 
     let raf;
-    const tick = (time) => {
-      lenis.raf(time);
-      raf = requestAnimationFrame(tick);
-    };
-
+    const tick = (time) => { lenis.raf(time); raf = requestAnimationFrame(tick); };
     raf = requestAnimationFrame(tick);
 
     return () => {
@@ -217,13 +160,11 @@ function App() {
       delete window.__lenis;
       cancelAnimationFrame(raf);
     };
-  }, [booted]);
+  }, []);
 
   return (
     <div className="App noise">
       <style>{PAGE_TRANSITION_CSS}</style>
-
-      {!booted && <LoadingScreen onDone={() => setBooted(true)} />}
 
       <BrutalScene theme={theme} />
 
