@@ -224,7 +224,7 @@ export default function Landing() {
                 </li>
               ))}
             </ul>
-            <Link to="/directions" className="btn-ghost reveal-title" style={{ marginTop: 36 }} data-testid="sim-cta">
+            <Link to="/mock" className="btn-ghost reveal-title" style={{ marginTop: 36 }} data-testid="sim-cta">
               ПОПРОБОВАТЬ →
             </Link>
           </div>

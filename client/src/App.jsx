@@ -12,7 +12,6 @@ import Recordings from "./pages/Recordings.jsx";
 import Tests from "./pages/Tests.jsx";
 import Quiz from "./pages/Quiz.jsx";
 import QuizDirection from "./pages/QuizDirection.jsx";
-import SoftSkills from "./pages/SoftSkills.jsx";
 import { DocsPage, PrivacyPage, TermsPage, StatusPage, ContactPage } from "./pages/Legal.jsx";
 import MockInterview from "./pages/MockInterview.jsx";
 
@@ -45,7 +44,6 @@ function AnimatedRoutes() {
         <Route path="/recordings" element={<Recordings />} />
         <Route path="/tests" element={<Tests />} />
         <Route path="/tests/quiz" element={<Quiz />} />
-        <Route path="/tests/soft-skills" element={<SoftSkills />} />
         <Route path="/quiz-direction" element={<QuizDirection />} />
         <Route path="/mock" element={<MockInterview />} />
         <Route path="/docs" element={<DocsPage />} />
@@ -137,14 +135,12 @@ function App() {
     setTimeout(() => root.classList.remove("theme-switching"), 420);
   };
 
-  // popup «выбор направления» — без зависимости от загрузочного экрана
   useEffect(() => {
     if (localStorage.getItem("pp-dir-test-seen") === "1") return;
     const t = setTimeout(() => setShowDirPopup(true), 5000);
     return () => clearTimeout(t);
   }, []);
 
-  // smooth-скролл Lenis включаем сразу
   useEffect(() => {
     const lenis = new Lenis({
       duration: 1.15,
@@ -167,15 +163,12 @@ function App() {
   return (
     <div className="App noise">
       <style>{PAGE_TRANSITION_CSS}</style>
-
       <BrutalScene theme={theme} />
-
       <BrowserRouter>
         <ScrollToTop />
         <NavBar theme={theme} onToggleTheme={toggleTheme} />
         <AnimatedRoutes />
         <Footer />
-
         {showDirPopup && (
           <DirectionTestPopup onClose={() => setShowDirPopup(false)} />
         )}

@@ -22,17 +22,6 @@ const TESTS = [
     accent: "#e5ff00",
     status: "READY",
   },
-
-  {
-    id: "softskills",
-    title: "SOFT SKILLS",
-    tag: "~4 МИН · 12 СЦЕНАРИЕВ",
-    desc: "Симуляция рабочих ситуаций: конфликт, фидбек, ответственность и ясность коммуникации.",
-    to: "/tests/soft-skills",
-    cta: "ПРОЙТИ ТЕСТ ↗",
-    accent: "#ff5b00",
-    status: "READY",
-  },
 ];
 
 export default function Tests() {
@@ -44,7 +33,6 @@ export default function Tests() {
       <h1 className="display" style={{ fontSize: "clamp(56px, 9vw, 140px)", margin: 0, color: "var(--fg)" }}>
         <span className="glitch" data-text="ТЕСТЫ">ТЕСТЫ</span>
       </h1>
-
 
       <div style={{ marginTop: 40, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
         {TESTS.map((t) => {
@@ -79,8 +67,6 @@ export default function Tests() {
           );
         })}
       </div>
-
-
     </div>
   );
 }
