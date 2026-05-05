@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import gsap from "gsap";
-
 const API = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const LS_KEY = "pp-mock-session";
 
@@ -790,6 +790,32 @@ function JudgementCinematic({ targetRank, onDone }) {
     </motion.div>
   );
 }
+
+/* ------------------------------- JudgementPortal ------------------------------- */
+
+function JudgementPortal({ show, targetRank, onDone }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || typeof document === "undefined") return null;
+
+  return createPortal(
+    <AnimatePresence mode="wait">
+      {show && (
+        <JudgementCinematic
+          key="cinematic"
+          targetRank={targetRank}
+          onDone={onDone}
+        />
+      )}
+    </AnimatePresence>,
+    document.body
+  );
+}
+
 /* ------------------------------- Result ------------------------------- */
 
 function Tag({ color, children }) {
@@ -1016,7 +1042,12 @@ export default function MockInterview() {
 
   const askAbort = () => setConfirmAbort(true);
 
-  if (!session) return <Setup onStart={setSession} rateLimit={rateLimit} meta={meta} />;
+  const startSession = (nextSession) => {
+    setCinematicDone(false);
+    setSession(nextSession);
+  };
+
+  if (!session) return <Setup onStart={startSession} rateLimit={rateLimit} meta={meta} />;
 
   const isFinishedStage = session.stage === "finished" || session.stage === "aborted";
   const showCinematic = isFinishedStage && !cinematicDone;
@@ -1035,15 +1066,11 @@ export default function MockInterview() {
         <ResultStage session={session} onRestart={restart} />
       )}
 
-      <AnimatePresence mode="wait">
-        {showCinematic && (
-          <JudgementCinematic
-            key="cinematic"
-            targetRank={targetRank}
-            onDone={() => setCinematicDone(true)}
-          />
-        )}
-      </AnimatePresence>
+      <JudgementPortal
+        show={showCinematic}
+        targetRank={targetRank}
+        onDone={() => setCinematicDone(true)}
+      />
 
       {confirmAbort && (<ConfirmModal onCancel={() => setConfirmAbort(false)} onConfirm={doAbort} />)}
     </>
