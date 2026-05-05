@@ -316,7 +316,7 @@ function ChatStage({ session, onUpdate, onAdvance }) {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={onKey}
-              placeholder="Отвечай развёрнуто, как на реальном собесе. Ctrl/Cmd+Enter — отправить."
+              placeholder="Отвечай развёрнуто, как на реальном собесе."
               rows={4}
               style={{
                 width: "100%", padding: 12, fontFamily: "inherit", fontSize: 14,
