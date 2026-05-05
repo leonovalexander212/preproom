@@ -612,13 +612,16 @@ function RankGlyph({ rank, size = "clamp(160px, 18vw, 240px)" }) {
  */
 function JudgementCinematic({ targetRank, onDone }) {
   const [glyph, setGlyph] = useState("?");
-  const [phase, setPhase] = useState("scramble"); // scramble | lock | impact | fade
+  const [phase, setPhase] = useState("scramble"); // scramble | lock | impact
   const [statusIdx, setStatusIdx] = useState(0);
   const startedAt = useRef(Date.now());
+  const lockedRef = useRef(false); // защита от двойного запуска lock в StrictMode
   const stageRef = useRef(null);
   const glyphRef = useRef(null);
   const ringRef = useRef(null);
   const sparksRef = useRef(null);
+  const onDoneRef = useRef(onDone);
+  useEffect(() => { onDoneRef.current = onDone; }, [onDone]);
 
   const STATUSES = [
     "INITIATING JUDGEMENT",
@@ -628,14 +631,14 @@ function JudgementCinematic({ targetRank, onDone }) {
     "FORGING VERDICT",
   ];
 
-  // ticker
+  // ticker — крутится пока не дошли до impact
   useEffect(() => {
-    if (phase !== "scramble") return;
+    if (phase === "impact") return;
     const t = setInterval(() => setStatusIdx((i) => (i + 1) % STATUSES.length), 700);
     return () => clearInterval(t);
   }, [phase]);
 
-  // scramble loop while waiting for targetRank
+  // scramble loop пока phase==='scramble'
   useEffect(() => {
     if (phase !== "scramble") return;
     const t = setInterval(() => {
@@ -644,24 +647,14 @@ function JudgementCinematic({ targetRank, onDone }) {
     return () => clearInterval(t);
   }, [phase]);
 
-  // entrance
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.fromTo(stageRef.current,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.45, ease: "power2.out" });
-      gsap.fromTo(glyphRef.current,
-        { scale: 0.6, opacity: 0, filter: "blur(20px)" },
-        { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.7, ease: "expo.out" });
-    }, stageRef);
-    return () => ctx.revert();
-  }, []);
-
-  // when targetRank arrives → minimum 1.4s of scramble for tension, then lock
+  // когда приходит targetRank — выдерживаем минимум 2.2с скрембла, потом lock-секвенция
   useEffect(() => {
     if (!targetRank) return;
+    if (lockedRef.current) return;
+    lockedRef.current = true;
+
     const elapsed = Date.now() - startedAt.current;
-    const minScramble = 1400;
+    const minScramble = 2200;
     const wait = Math.max(0, minScramble - elapsed);
 
     const lockTimer = setTimeout(() => {
@@ -670,59 +663,53 @@ function JudgementCinematic({ targetRank, onDone }) {
       let i = 0;
       const step = () => {
         setGlyph(RANK_ORDER[i]);
-        // pulse on each step
-        gsap.fromTo(glyphRef.current,
-          { scale: 1.22 },
-          { scale: 1, duration: 0.22, ease: "power3.out" });
-
+        if (glyphRef.current) {
+          gsap.fromTo(glyphRef.current,
+            { scale: 1.22 },
+            { scale: 1, duration: 0.22, ease: "power3.out", overwrite: "auto" });
+        }
         if (i >= idxTarget) {
           // IMPACT
           setTimeout(() => {
             setPhase("impact");
-            // screen shake
-            gsap.to(stageRef.current, {
-              keyframes: [
-                { x: -10, y: 6, duration: 0.05 },
-                { x:  12, y: -8, duration: 0.05 },
-                { x:  -7, y: 4, duration: 0.05 },
-                { x:   5, y: -3, duration: 0.05 },
-                { x:   0, y: 0, duration: 0.05 },
-              ],
-            });
-            // glyph slam
-            gsap.fromTo(glyphRef.current,
-              { scale: 1.85, filter: "blur(0px) brightness(1.6)" },
-              { scale: 1, filter: "blur(0px) brightness(1)", duration: 1.0,
-                ease: "elastic.out(1, 0.4)" });
-            // shockwave
-            gsap.fromTo(ringRef.current,
-              { scale: 0.2, opacity: 0.95 },
-              { scale: 6, opacity: 0, duration: 1.2, ease: "power2.out" });
-            // sparks
+            if (stageRef.current) {
+              gsap.to(stageRef.current, {
+                keyframes: [
+                  { x: -10, y: 6, duration: 0.05 },
+                  { x:  12, y: -8, duration: 0.05 },
+                  { x:  -7, y: 4, duration: 0.05 },
+                  { x:   5, y: -3, duration: 0.05 },
+                  { x:   0, y: 0, duration: 0.05 },
+                ],
+                overwrite: "auto",
+              });
+            }
+            if (glyphRef.current) {
+              gsap.fromTo(glyphRef.current,
+                { scale: 1.85 },
+                { scale: 1, duration: 1.0, ease: "elastic.out(1, 0.4)", overwrite: "auto" });
+            }
+            if (ringRef.current) {
+              gsap.fromTo(ringRef.current,
+                { scale: 0.2, opacity: 0.95 },
+                { scale: 6, opacity: 0, duration: 1.2, ease: "power2.out", overwrite: "auto" });
+            }
             if (sparksRef.current) {
-              const s = sparksRef.current.querySelectorAll(".jdg-spark");
-              s.forEach((sp, k) => {
-                const a = (k / s.length) * Math.PI * 2 + Math.random() * 0.3;
+              const sp = sparksRef.current.querySelectorAll(".jdg-spark");
+              sp.forEach((s, k) => {
+                const a = (k / sp.length) * Math.PI * 2 + Math.random() * 0.3;
                 const d = 220 + Math.random() * 180;
-                gsap.set(sp, { x: 0, y: 0, opacity: 1, scale: 1 });
-                gsap.to(sp, {
-                  x: Math.cos(a) * d,
-                  y: Math.sin(a) * d,
-                  opacity: 0,
-                  scale: 0.2,
+                gsap.set(s, { x: 0, y: 0, opacity: 1, scale: 1 });
+                gsap.to(s, {
+                  x: Math.cos(a) * d, y: Math.sin(a) * d,
+                  opacity: 0, scale: 0.2,
                   duration: 0.9 + Math.random() * 0.5,
                   ease: "power2.out",
                 });
               });
             }
-            // fade out + handoff
-            setTimeout(() => {
-              setPhase("fade");
-              gsap.to(stageRef.current, {
-                opacity: 0, duration: 0.55, ease: "power2.in",
-                onComplete: onDone,
-              });
-            }, 1100);
+            // финальный handoff — через framer exit
+            setTimeout(() => onDoneRef.current?.(), 1400);
           }, 250);
           return;
         }
@@ -735,7 +722,7 @@ function JudgementCinematic({ targetRank, onDone }) {
     }, wait);
 
     return () => clearTimeout(lockTimer);
-  }, [targetRank, onDone]);
+  }, [targetRank]);
 
   const theme = RANK_THEMES[targetRank] ?? RANK_THEMES.D;
   const cssVars = {
@@ -747,7 +734,16 @@ function JudgementCinematic({ targetRank, onDone }) {
   const isSSS = targetRank === "SSS" && phase !== "scramble";
 
   return (
-    <div ref={stageRef} className="jdg-overlay" style={cssVars} data-testid="judgement-overlay">
+    <motion.div
+      ref={stageRef}
+      className="jdg-overlay"
+      style={cssVars}
+      data-testid="judgement-overlay"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+    >
       <div className="jdg-grid" aria-hidden="true" />
       <div className="jdg-vignette" aria-hidden="true" />
 
@@ -760,24 +756,27 @@ function JudgementCinematic({ targetRank, onDone }) {
       <div className="jdg-center">
         <span ref={ringRef} className="jdg-ring" aria-hidden="true" />
         <span ref={sparksRef} className="jdg-sparks" aria-hidden="true">
-          {Array.from({ length: 22 }).map((_, i) => (
-            <span key={i} className="jdg-spark" />
-          ))}
+          {Array.from({ length: 22 }).map((_, i) => (<span key={i} className="jdg-spark" />))}
         </span>
 
-        <div ref={glyphRef} className={`rg-stage jdg-glyph ${isSSS ? "rg-stage--sss" : ""}`}>
+        <motion.div
+          ref={glyphRef}
+          initial={{ scale: 0.6, opacity: 0, filter: "blur(20px)" }}
+          animate={{ scale: 1, opacity: 1, filter: "blur(0px)" }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className={`rg-stage jdg-glyph ${isSSS ? "rg-stage--sss" : ""}`}
+        >
           <span className="rg-glyph rg-glyph--back" aria-hidden="true">{glyph}</span>
           <span className="rg-glyph rg-glyph--front">{glyph}</span>
-        </div>
+        </motion.div>
 
-        {phase === "scramble" && (
+        {phase === "scramble" ? (
           <div className="jdg-status">
             <span className="jdg-bracket">[</span>
             <span className="jdg-status-text">{STATUSES[statusIdx]}</span>
             <span className="jdg-bracket">]</span>
           </div>
-        )}
-        {phase !== "scramble" && (
+        ) : (
           <div className="jdg-status jdg-status--locked">
             <span>RANK ACQUIRED</span>
           </div>
@@ -788,10 +787,9 @@ function JudgementCinematic({ targetRank, onDone }) {
         <span>{phase === "scramble" ? "ANALYZING…" : "VERDICT LOCKED"}</span>
         <span className="jdg-bar"><span className="jdg-bar-fill" /></span>
       </div>
-    </div>
+    </motion.div>
   );
 }
-
 /* ------------------------------- Result ------------------------------- */
 
 function Tag({ color, children }) {
@@ -1037,7 +1035,7 @@ export default function MockInterview() {
         <ResultStage session={session} onRestart={restart} />
       )}
 
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {showCinematic && (
           <JudgementCinematic
             key="cinematic"
