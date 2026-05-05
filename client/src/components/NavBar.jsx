@@ -8,9 +8,9 @@ export default function NavBar({ theme, onToggleTheme }) {
   const peekTimer = useRef(null);
   const isHovered = useRef(false);
 
-  // Сколько ждать после ухода курсора с верхней зоны, прежде чем спрятать.
-  // Было 1800ms — стало 500ms. Хочешь ещё быстрее — поставь 250.
-  const PEEK_HIDE_DELAY = 500;
+  // После того как курсор ушёл с верхней зоны — навбар прячется через 1с.
+  // Было 500мс (дёрганно). Теперь плавнее и единообразно.
+  const PEEK_HIDE_DELAY = 1000;
 
   useEffect(() => {
     const onScroll = () => {
@@ -52,10 +52,10 @@ export default function NavBar({ theme, onToggleTheme }) {
       onMouseLeave={() => {
         isHovered.current = false;
         clearTimeout(peekTimer.current);
-        // Если уже проскроллено вниз — прячем почти сразу
+        // Единая задержка 1 сек — такая же, как при уходе курсора из верхней зоны.
         peekTimer.current = setTimeout(() => {
           if (window.scrollY > 60 && !isHovered.current) setHidden(true);
-        }, 250);
+        }, PEEK_HIDE_DELAY);
       }}
       style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
@@ -63,7 +63,7 @@ export default function NavBar({ theme, onToggleTheme }) {
         background: "var(--nav-bg)", backdropFilter: "blur(10px)",
         borderBottom: "2px solid var(--line)",
         transform: hidden ? "translateY(-110%)" : "translateY(0)",
-        transition: "transform 320ms cubic-bezier(.2,.8,.2,1), background 300ms ease",
+        transition: "transform 420ms cubic-bezier(.2,.8,.2,1), background 300ms ease",
       }}>
       <Link to="/" data-testid="nav-logo" style={{ display: "inline-flex", alignItems: "center", gap: 12, color: "var(--fg)" }}>
         <div style={{ width: 32, height: 32, background: "var(--accent)", display: "grid", placeItems: "center", border: "2px solid var(--fg)", boxShadow: "3px 3px 0 var(--fg)", fontFamily: "Archivo Black", color: "#000", fontSize: 18 }}>P</div>

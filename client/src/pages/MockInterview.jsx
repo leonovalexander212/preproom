@@ -1,17 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
-/*
-  AI MOCK INTERVIEW — обновлённый поток:
-  1) setup   — выбор направления (Python/Java/Frontend/PHP) и грейда (только Junior)
-  2) qa      — реальные вопросы из БД, без пер-вопросного ревью
-  3) coding  — лайв-кодинг, оценка через Piston (реальные тесты)
-  4) result  — итог в стиле Devil May Cry (D/C/B/A/S/SS/SSS) + анимация
-
-  Песочные часы: SVG с анимацией песка пропорционально таймеру.
-  Прервать: списывает попытку (анти-абуз).
-*/
-
 const API = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const LS_KEY = "pp-mock-session";
 
@@ -56,6 +45,9 @@ const btnDanger = {
   borderColor: "#ff5b00", fontWeight: 800, letterSpacing: "0.06em", cursor: "pointer",
 };
 
+/* Единый верхний отступ, чтобы не срасталось с навбаром */
+const PAGE_TOP = "112px";
+
 function Crumb({ stage }) {
   const map = { setup: "НАСТРОЙКА", qa: "ВОПРОСЫ", coding: "ЛАЙВ-КОДИНГ", result: "РЕЗУЛЬТАТ", aborted: "ПРЕРВАНО" };
   return (
@@ -66,12 +58,9 @@ function Crumb({ stage }) {
 }
 
 /* ------------------------------- Hourglass ------------------------------- */
-/* SVG-песочные часы, песок плавно перетекает по progress (0..1, где 0 — старт, 1 — конец) */
 
 function Hourglass({ progress, danger }) {
-  // прогресс от 0 (старт) до 1 (всё высыпалось)
   const p = Math.min(1, Math.max(0, progress));
-  // верх: высота песка от 32 (полный) до 0; низ: от 0 до 32
   const topSandH = 32 * (1 - p);
   const botSandH = 32 * p;
   const fall = p > 0 && p < 1;
@@ -84,23 +73,18 @@ function Hourglass({ progress, danger }) {
           <stop offset="100%" stopColor={danger ? "#ff8a00" : "#fff79a"} />
         </linearGradient>
       </defs>
-      {/* рамка */}
       <rect x="6" y="2" width="44" height="4" fill="currentColor" />
       <rect x="6" y="74" width="44" height="4" fill="currentColor" />
-      {/* стенки */}
       <path d="M10 6 L46 6 L30 38 L46 74 L10 74 L26 38 Z" fill="none" stroke="currentColor" strokeWidth="2" />
-      {/* верхний песок */}
       <clipPath id="topClip"><path d="M11 7 L45 7 L29.5 38 L26.5 38 Z" /></clipPath>
       <rect x="0" y={6 + (32 - topSandH)} width="56" height={topSandH} fill="url(#sandGrad)" clipPath="url(#topClip)">
         <animate attributeName="opacity" values="1;0.85;1" dur="1.6s" repeatCount="indefinite" />
       </rect>
-      {/* струйка */}
       {fall && (
         <line x1="28" y1="38" x2="28" y2="42" stroke={danger ? "#ff5b00" : "var(--accent, #e5ff00)"} strokeWidth="2">
           <animate attributeName="opacity" values="0.4;1;0.4" dur="0.6s" repeatCount="indefinite" />
         </line>
       )}
-      {/* нижний песок */}
       <clipPath id="botClip"><path d="M26.5 38 L29.5 38 L46 74 L10 74 Z" /></clipPath>
       <rect x="0" y={74 - botSandH} width="56" height={botSandH} fill="url(#sandGrad)" clipPath="url(#botClip)" />
     </svg>
@@ -136,14 +120,14 @@ function Setup({ onStart, rateLimit, meta }) {
   };
 
   return (
-    <div style={{ maxWidth: 960, margin: "0 auto", padding: "48px 24px" }}>
+    <div style={{ maxWidth: 960, margin: "0 auto", padding: `${PAGE_TOP} 24px 48px` }}>
       <Crumb stage="setup" />
       <h1 style={{ fontSize: "clamp(40px, 6vw, 72px)", fontWeight: 900, margin: "0 0 8px", letterSpacing: "-0.03em" }}>
         AI MOCK INTERVIEW
       </h1>
       <p style={{ opacity: 0.7, maxWidth: 680, margin: "0 0 28px", fontSize: 16, lineHeight: 1.5 }}>
-        Реалистичный тех-собес с <b>Джарвисом</b>. Вопросы — из реальных видео-интервью в БД (порядок сохраняется).
-        Лайв-кодинг — задачи в файлах, оценка автоматическими тестами в песочнице. Финальный ранг — в стиле Devil May Cry.
+        Реалистичный тех-собес с <b>Джарвисом</b>. 15 технических вопросов — из реальных видео-интервью в БД.
+        Лайв-кодинг — задачи в файлах, оценка автотестами. Финальный ранг — в стиле Devil May Cry.
       </p>
 
       {rateLimit && (
@@ -182,11 +166,7 @@ function Setup({ onStart, rateLimit, meta }) {
                 }}
               >
                 {d.label}
-                {disabled && (
-                  <div style={{ marginTop: 6, fontSize: 10, letterSpacing: "0.1em", opacity: 0.7 }}>
-                    СКОРО
-                  </div>
-                )}
+                {disabled && (<div style={{ marginTop: 6, fontSize: 10, letterSpacing: "0.1em", opacity: 0.7 }}>СКОРО</div>)}
               </button>
             );
           })}
@@ -216,9 +196,7 @@ function Setup({ onStart, rateLimit, meta }) {
                 }}
               >
                 <div style={{ fontWeight: 800, letterSpacing: "0.08em", fontSize: 20 }}>{g.label}</div>
-                <div style={{ fontSize: 12, opacity: 0.65, marginTop: 4 }}>
-                  {disabled ? "СКОРО" : g.hint}
-                </div>
+                <div style={{ fontSize: 12, opacity: 0.65, marginTop: 4 }}>{disabled ? "СКОРО" : g.hint}</div>
               </button>
             );
           })}
@@ -240,15 +218,13 @@ function Setup({ onStart, rateLimit, meta }) {
         >
           {loading ? "ПОДГОТОВКА..." : "НАЧАТЬ СОБЕС ↗"}
         </button>
-        <Link to="/tests" style={{ ...btnGhost, textDecoration: "none", display: "inline-block" }}>
-          НАЗАД
-        </Link>
+        <Link to="/tests" style={{ ...btnGhost, textDecoration: "none", display: "inline-block" }}>НАЗАД</Link>
       </div>
     </div>
   );
 }
 
-/* ------------------------------- TopBar (timer + abort) ------------------------------- */
+/* ------------------------------- TopBar ------------------------------- */
 
 function TopBar({ session, onAbort, label }) {
   const [now, setNow] = useState(Date.now());
@@ -293,16 +269,13 @@ function TopBar({ session, onAbort, label }) {
       </button>
 
       <style>{`
-        @keyframes ppPulse {
-          0%, 100% { opacity: 1; }
-          50%      { opacity: 0.55; }
-        }
+        @keyframes ppPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
       `}</style>
     </div>
   );
 }
 
-/* ------------------------------- QA Stage ------------------------------- */
+/* ------------------------------- QA Stage (FIX высоты) ------------------------------- */
 
 function ChatStage({ session, onUpdate, onAbort }) {
   const [draft, setDraft] = useState("");
@@ -330,29 +303,31 @@ function ChatStage({ session, onUpdate, onAbort }) {
     finally { setLoading(false); }
   };
 
-  const onKey = (e) => {
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) submit();
-  };
+  const onKey = (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) submit(); };
 
   const total = session.totalQuestions;
   const answered = session.answers.length;
   const progress = total ? (answered / total) * 100 : 0;
 
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
+    <div className="mock-root" style={{ maxWidth: 1100, margin: "0 auto", padding: `${PAGE_TOP} 24px 32px` }}>
       <Crumb stage="qa" />
       <TopBar session={session} onAbort={onAbort}
               label={`ВОПРОС ${Math.min(session.currentQuestionNumber, total)} ИЗ ${total}`} />
 
-      {/* Прогресс */}
       <div style={{ height: 6, background: "var(--fg)", opacity: 0.12, position: "relative", marginBottom: 20 }}>
         <div style={{ position: "absolute", inset: 0, width: `${progress}%`, background: "var(--accent)", transition: "width 300ms ease" }} />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 320px", gap: 20 }}>
-        <div style={{ ...brBox, padding: 0, display: "flex", flexDirection: "column", minHeight: 540 }}>
-          <div ref={scrollerRef} data-testid="mock-chat-scroller"
-               style={{ flex: 1, overflowY: "auto", padding: 24, maxHeight: "60vh" }}>
+        {/* Чат — ФИКСИРОВАННАЯ высота, не разрастается */}
+        <div style={{ ...brBox, padding: 0 }} className="mock-chat-shell">
+          <div
+            ref={scrollerRef}
+            data-testid="mock-chat-scroller"
+            data-lenis-prevent
+            className="mock-chat-scroller"
+          >
             {session.answers.map((a, i) => (
               <React.Fragment key={a.questionId + i}>
                 <AIBubble text={a.questionText} tag={`${a.topic} · ВОПРОС ${i + 1}`} />
@@ -368,10 +343,11 @@ function ChatStage({ session, onUpdate, onAbort }) {
             )}
           </div>
 
-          <div style={{ borderTop: "2px solid var(--fg)", padding: 16, background: "var(--bg)" }}>
+          <div style={{ borderTop: "2px solid var(--fg)", padding: 16, background: "var(--bg)", flex: "0 0 auto" }}>
             {error && <div style={{ marginBottom: 8, color: "#ff5b00", fontSize: 13, fontWeight: 700 }}>{error}</div>}
             <textarea
               data-testid="mock-answer-input"
+              data-lenis-prevent
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={onKey}
@@ -380,7 +356,7 @@ function ChatStage({ session, onUpdate, onAbort }) {
               style={{
                 width: "100%", padding: 12, fontFamily: "inherit", fontSize: 14,
                 background: "transparent", color: "var(--fg)", border: "2px solid var(--fg)",
-                resize: "vertical", outline: "none", boxSizing: "border-box",
+                resize: "none", outline: "none", boxSizing: "border-box",
               }}
             />
             <div style={{ marginTop: 10, display: "flex", gap: 10, justifyContent: "flex-end", alignItems: "center" }}>
@@ -477,7 +453,6 @@ function CodingStage({ session, onUpdate, onAbort }) {
         body: JSON.stringify({ sessionId: session.id, code }),
       });
       setLastResult(data.result);
-      // даём пользователю увидеть результат, потом обновляем
       setTimeout(() => onUpdate(data.session), 1200);
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
@@ -486,7 +461,7 @@ function CodingStage({ session, onUpdate, onAbort }) {
   if (!task) return null;
 
   return (
-    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }}>
+    <div className="mock-root" style={{ maxWidth: 1200, margin: "0 auto", padding: `${PAGE_TOP} 24px 32px` }}>
       <Crumb stage="coding" />
       <TopBar session={session} onAbort={onAbort}
               label={`ЗАДАЧА ${session.currentCodingNumber} ИЗ ${session.totalCoding}`} />
@@ -521,6 +496,7 @@ function CodingStage({ session, onUpdate, onAbort }) {
             </div>
             <textarea
               data-testid="mock-code-editor"
+              data-lenis-prevent
               value={code}
               onChange={(e) => setCode(e.target.value)}
               spellCheck={false}
@@ -557,8 +533,7 @@ function CodingStage({ session, onUpdate, onAbort }) {
           <div style={{ ...brBox, padding: 18 }}>
             <div style={{ fontSize: 11, letterSpacing: "0.15em", opacity: 0.6, marginBottom: 8 }}>ПЕСОЧНИЦА</div>
             <div style={{ fontSize: 13, opacity: 0.8, lineHeight: 1.55 }}>
-              Код запускается на изолированном раннере (Piston). Тесты с stdin/stdout, ожидаемый ответ скрыт.
-              Подсказок и подсчёта по человеку — нет, только автотесты.
+              Код прогоняется AI-раннером против скрытых тестов (stdin/stdout). Ожидаемый ответ тебе не виден.
             </div>
           </div>
 
@@ -589,117 +564,152 @@ function extFromLang(l) {
   return { javascript: "js", java: "java", python: "py", php: "php" }[l] ?? "txt";
 }
 
-/* ------------------------------- Result (DMC rank) ------------------------------- */
+/* ------------------------------- DMC RANK ------------------------------- */
+
+const RANK_ORDER = ["D", "C", "B", "A", "S", "SS", "SSS"];
 
 const RANK_THEMES = {
-  D:   { color: "#7a7a7a", glow: "rgba(122,122,122,0.5)",  bg: "#1a1a1a", label: "DULL" },
-  C:   { color: "#4ECDC4", glow: "rgba(78,205,196,0.6)",   bg: "#082624", label: "COOL" },
-  B:   { color: "#3B82F6", glow: "rgba(59,130,246,0.7)",   bg: "#071a3a", label: "BRAVO" },
-  A:   { color: "#A855F7", glow: "rgba(168,85,247,0.7)",   bg: "#1c0a2e", label: "ALRIGHT!" },
-  S:   { color: "#FFD700", glow: "rgba(255,215,0,0.85)",   bg: "#241b00", label: "STYLISH!" },
-  SS:  { color: "#FF6B35", glow: "rgba(255,107,53,0.95)",  bg: "#2c0b00", label: "SHOWTIME!!" },
-  SSS: { color: "#FF1A8C", glow: "rgba(255,26,140,1.0)",   bg: "#100018", label: "SMOKIN' SEXY STYLE!!!" },
+  D:   { top:"#ffffff", mid:"#cfcfcf", bot:"#6a6a6a", glow:"rgba(255,255,255,0.35)", accent:"#9a9a9a",   label:"DULL"  },
+  C:   { top:"#dcfffb", mid:"#7EEADF", bot:"#1d8078", glow:"rgba(78,205,196,0.55)",  accent:"#4ECDC4",   label:"COOL"  },
+  B:   { top:"#dce9ff", mid:"#6aa7ff", bot:"#1f49a6", glow:"rgba(59,130,246,0.6)",   accent:"#3B82F6",   label:"BRAVO" },
+  A:   { top:"#f1dcff", mid:"#c38bff", bot:"#5f21a3", glow:"rgba(168,85,247,0.65)",  accent:"#A855F7",   label:"ALRIGHT!" },
+  S:   { top:"#fff7c2", mid:"#ffd54a", bot:"#9a6b00", glow:"rgba(255,215,0,0.8)",    accent:"#FFD700",   label:"STYLISH!" },
+  SS:  { top:"#ffd2b8", mid:"#ff8d52", bot:"#a63900", glow:"rgba(255,107,53,0.9)",   accent:"#FF6B35",   label:"SHOWTIME!!" },
+  SSS: { top:"#ffdff0", mid:"#ff5ca6", bot:"#8e0750", glow:"rgba(255,26,140,1.0)",   accent:"#FF1A8C",   label:"SMOKIN' SEXY STYLE!!!" },
 };
+
+function DMCRankLetter({ targetRank, size = "clamp(110px, 14vw, 160px)" }) {
+  const targetIdx = Math.max(0, RANK_ORDER.indexOf(targetRank));
+  const [idx, setIdx] = useState(0);
+  const [settled, setSettled] = useState(targetIdx === 0);
+
+  useEffect(() => {
+    if (idx >= targetIdx) { setSettled(true); return; }
+    const stepsLeft = targetIdx - idx;
+    const delay = stepsLeft > 3 ? 320 : stepsLeft > 1 ? 240 : 180;
+    const t = setTimeout(() => setIdx((i) => i + 1), delay);
+    return () => clearTimeout(t);
+  }, [idx, targetIdx]);
+
+  const current = RANK_ORDER[idx];
+  const theme = RANK_THEMES[current] ?? RANK_THEMES.D;
+  const isSSS = current === "SSS";
+
+  const cssVars = {
+    "--dmc-top": theme.top,
+    "--dmc-mid": theme.mid,
+    "--dmc-bot": theme.bot,
+    "--dmc-glow": theme.glow,
+  };
+
+  return (
+    <span
+      key={current}
+      data-testid="mock-rank-letters"
+      className={`dmc-letter ${settled ? "is-final" : ""} ${isSSS ? "dmc-letter--sss" : ""}`}
+      style={{ ...cssVars, fontSize: size }}
+    >
+      {current}
+    </span>
+  );
+}
+
+/* ------------------------------- Result (компактная карточка) ------------------------------- */
 
 function ResultStage({ session, onRestart }) {
   const r = session.finalReport;
+  const [introDone, setIntroDone] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setIntroDone(true), 850);
+    return () => clearTimeout(t);
+  }, []);
+
   if (!r) return null;
   const theme = RANK_THEMES[r.rank] ?? RANK_THEMES.D;
   const passed = r.verdict === "passed";
-  const sssMode = r.rank === "SSS";
 
-  // эпичная анимация: появление букв ранга по одной + screen shake
   return (
-    <div style={{ position: "relative", overflow: "hidden" }}>
-      <DMCStyles />
+    <div className="mock-root" style={{ position: "relative", padding: `${PAGE_TOP} 24px 24px` }}>
+      {!introDone && <div className="dmc-intro-overlay" aria-hidden="true" />}
 
-      {/* baner */}
-      <div style={{
-        position: "relative",
-        background: `radial-gradient(ellipse at 30% 30%, ${theme.bg} 0%, var(--bg) 70%)`,
-        borderBottom: "2px solid var(--fg)",
-        padding: "60px 24px 40px",
-        textAlign: "center",
-        animation: "ppShake 0.6s ease-out",
-      }}>
-        {/* лучи */}
-        <div className="ppRays" style={{
-          position: "absolute", inset: 0, pointerEvents: "none",
-          background:
-            `conic-gradient(from 0deg, transparent 0deg, ${theme.glow} 10deg, transparent 20deg,` +
-            ` transparent 60deg, ${theme.glow} 70deg, transparent 80deg,` +
-            ` transparent 130deg, ${theme.glow} 140deg, transparent 150deg,` +
-            ` transparent 210deg, ${theme.glow} 220deg, transparent 230deg,` +
-            ` transparent 290deg, ${theme.glow} 300deg, transparent 310deg)`,
-          opacity: 0.18, animation: "ppSpin 14s linear infinite",
-        }} />
-
-        <div style={{
-          position: "relative", display: "inline-flex", flexDirection: "column", alignItems: "center", gap: 8,
-        }}>
-          <div style={{ fontSize: 12, letterSpacing: "0.4em", opacity: 0.6 }}>
-            ИТОГ · {session.directionLabel} · {session.grade}{session.stage === "aborted" ? " · ПРЕРВАНО" : ""}
-          </div>
-
-        <div data-testid="mock-rank-letters" style={{
-          display: "flex", gap: r.rank.length === 3 ? 6 : 0,
-          filter: `drop-shadow(0 0 30px ${theme.glow}) drop-shadow(4px 6px 0 #000)`,
-        }}>
-          {r.rank.split("").map((ch, i) => (
-            <span
-              key={i}
-              className={`dmc-rank-letter ${sssMode ? "dmc-rank-letter--sss" : ""}`}
-              style={{
-                color: sssMode ? undefined : theme.color,
-                animationDelay: `${0.18 + i * 0.18}s`,
-                fontSize: "clamp(160px, 22vw, 280px)",
-                textShadow: sssMode
-                  ? `0 0 28px ${theme.glow}`
-                  : `0 0 22px ${theme.glow}, 5px 5px 0 #000, -2px -2px 0 rgba(255,255,255,0.15)`,
-              }}
-            >
-              {ch}
-            </span>
-          ))}
+      {/* Компактная квадратная карточка результата */}
+      <div
+        className="dmc-result-card"
+        style={{
+          "--dmc-accent": theme.accent,
+          "--dmc-card-bg": theme.glow,
+        }}
+      >
+        <div style={{ fontSize: 10, letterSpacing: "0.3em", opacity: 0.55, marginBottom: 10 }}>
+          {session.grade} · {session.directionLabel?.toUpperCase?.()} · JUNIOR
+          {session.stage === "aborted" ? " · ПРЕРВАНО" : ""}
         </div>
 
-          <div style={{
-            fontFamily: "'Black Ops One', 'Big Shoulders Stencil Display', Impact, sans-serif",
-            fontStyle: "italic",
-            fontSize: "clamp(22px, 3vw, 38px)", letterSpacing: "0.1em",
-            color: theme.color, marginTop: -8,
-            animation: "ppFadeUp 0.6s ease-out 1.2s both",
-          }}>
-            {r.rankLabel || theme.label}
-          </div>
-
-          <div style={{
-            display: "flex", alignItems: "baseline", gap: 10, marginTop: 14,
-            animation: "ppFadeUp 0.6s ease-out 1.4s both",
-          }}>
-            <div data-testid="mock-final-score" style={{
-              fontSize: "clamp(48px, 7vw, 92px)", fontWeight: 900, letterSpacing: "-0.04em",
-              color: "var(--fg)", lineHeight: 1,
-            }}>
+        {/* Двухколоночный grid: СЧЁТ слева, БУКВА справа */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "1fr auto",
+          alignItems: "center",
+          gap: 18,
+          minHeight: 180,
+        }}>
+          {/* Score */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
+            <div
+              data-testid="mock-final-score"
+              className="display"
+              style={{
+                fontSize: "clamp(64px, 9vw, 108px)",
+                lineHeight: 0.9,
+                color: "var(--fg)",
+                letterSpacing: "-0.04em",
+                whiteSpace: "nowrap",
+              }}
+            >
               {r.totalScore}
+              <span className="display" style={{ fontSize: "0.3em", opacity: 0.5, marginLeft: 4, letterSpacing: "0" }}>
+                /100
+              </span>
             </div>
-            <div style={{ fontSize: 14, opacity: 0.55, letterSpacing: "0.2em" }}>/100</div>
+            <div
+              className="display"
+              style={{
+                fontSize: "clamp(14px, 1.7vw, 18px)",
+                color: theme.accent,
+                letterSpacing: "0.1em",
+                marginTop: 2,
+              }}
+            >
+              {r.rankLabel || theme.label}
+            </div>
           </div>
 
+          {/* Letter */}
           <div style={{
-            display: "inline-block", padding: "4px 14px", marginTop: 8,
-            background: passed ? "#34d399" : "#ff5b00", color: "#000",
-            fontWeight: 900, letterSpacing: "0.15em", fontSize: 12,
-            animation: "ppFadeUp 0.6s ease-out 1.6s both",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            width: 170, height: 170, flexShrink: 0,
           }}>
-            {passed ? "✓ ОФФЕР ВЕРОЯТЕН" : "× ПОКА НЕТ"}
+            <DMCRankLetter targetRank={r.rank} size="clamp(110px, 13vw, 150px)" />
           </div>
+        </div>
+
+        <div style={{
+          display: "inline-block", padding: "5px 12px", marginTop: 14,
+          background: passed ? "#34d399" : "#ff5b00", color: "#000",
+          fontWeight: 900, letterSpacing: "0.15em", fontSize: 11,
+        }}>
+          {passed ? "✓ ОФФЕР ВЕРОЯТЕН" : "× ПОКА НЕТ"}
         </div>
       </div>
 
-      {/* контент */}
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px",
-        animation: "ppFadeUp 0.6s ease-out 1.9s both" }}>
+      {/* Фидбек */}
+      <div
+        style={{
+          maxWidth: 1100, margin: "36px auto 0", padding: "0 0 40px",
+          animation: "ppFadeUp 0.6s ease-out 0.85s both",
+        }}
+      >
         <Crumb stage="result" />
 
         <div style={{ ...brBox, padding: 24, marginBottom: 24 }}>
@@ -717,9 +727,7 @@ function ResultStage({ session, onRestart }) {
 
         {(session.coding?.length > 0) && (
           <div style={{ ...brBox, padding: 24, marginBottom: 24 }}>
-            <div style={{ fontSize: 11, letterSpacing: "0.15em", opacity: 0.6, marginBottom: 14 }}>
-              ЛАЙВ-КОДИНГ
-            </div>
+            <div style={{ fontSize: 11, letterSpacing: "0.15em", opacity: 0.6, marginBottom: 14 }}>ЛАЙВ-КОДИНГ</div>
             {session.coding.map((c, i) => {
               const ok = c.testsTotal > 0 && c.testsPassed === c.testsTotal;
               return (
@@ -758,62 +766,14 @@ function ResultStage({ session, onRestart }) {
           <Link to="/tests" style={{ ...btnGhost, textDecoration: "none", display: "inline-block" }}>К ТЕСТАМ</Link>
         </div>
       </div>
+
+      <style>{`
+        @keyframes ppFadeUp {
+          0%   { opacity: 0; transform: translateY(14px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
-  );
-}
-
-function DMCStyles() {
-  return (
-    <style>{`
-      /* Devil May Cry-стайл шрифт: Black Ops One + Bungee Inline (для SSS) */
-      @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Bungee+Inline&family=Big+Shoulders+Stencil+Display:wght@900&display=swap');
-
-      .dmc-rank-letter {
-        display: inline-block;
-        opacity: 0;
-        font-family: 'Black Ops One', 'Big Shoulders Stencil Display', Impact, sans-serif;
-        font-style: italic;
-        font-weight: 900;
-        line-height: 0.85;
-        letter-spacing: -0.02em;
-        transform-origin: 50% 60%;
-        animation: ppRankPop 0.7s cubic-bezier(0.2, 1.6, 0.4, 1) forwards;
-      }
-      .dmc-rank-letter--sss {
-        font-family: 'Bungee Inline', 'Black Ops One', Impact, sans-serif;
-        background: linear-gradient(90deg, #FF1A8C 0%, #FFD700 25%, #00E5FF 50%, #A855F7 75%, #FF1A8C 100%);
-        background-size: 200% 200%;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        color: transparent;
-        animation: ppRankPop 0.7s cubic-bezier(0.2, 1.6, 0.4, 1) forwards,
-                   ppRainbow 4s linear infinite;
-      }
-
-      @keyframes ppShake {
-        0%, 100% { transform: translate(0, 0); }
-        15% { transform: translate(-6px, 4px); }
-        30% { transform: translate(6px, -4px); }
-        45% { transform: translate(-4px, 2px); }
-        60% { transform: translate(4px, -2px); }
-        75% { transform: translate(-2px, 1px); }
-      }
-      @keyframes ppSpin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
-      @keyframes ppFadeUp {
-        0%   { opacity: 0; transform: translateY(14px); }
-        100% { opacity: 1; transform: translateY(0); }
-      }
-      @keyframes ppRankPop {
-        0%   { opacity: 0; transform: translateY(40px) scale(0.7) rotate(-8deg) skewX(-6deg); filter: blur(12px); }
-        50%  { opacity: 1; transform: translateY(-10px) scale(1.18) rotate(2deg) skewX(-10deg); filter: blur(0); }
-        100% { opacity: 1; transform: translateY(0)   scale(1)    rotate(0)    skewX(-8deg); filter: blur(0); }
-      }
-      @keyframes ppRainbow {
-        0%   { background-position: 0%   50%; }
-        100% { background-position: 200% 50%; }
-      }
-    `}</style>
   );
 }
 
@@ -835,7 +795,6 @@ export default function MockInterview() {
   const [finalizing, setFinalizing] = useState(false);
   const [confirmAbort, setConfirmAbort] = useState(false);
 
-  // initial loads
   useEffect(() => {
     const saved = localStorage.getItem(LS_KEY);
     if (saved) {
@@ -849,7 +808,6 @@ export default function MockInterview() {
 
   useEffect(() => { if (session?.id) localStorage.setItem(LS_KEY, session.id); }, [session?.id]);
 
-  // авто-финалайз когда стадия finished/aborted и нет отчёта
   useEffect(() => {
     if (!session) return;
     const needFinalize = (session.stage === "finished" || session.stage === "aborted") && !session.finalReport && !finalizing;
@@ -865,12 +823,10 @@ export default function MockInterview() {
       .finally(() => setFinalizing(false));
   }, [session?.stage, session?.finalReport, finalizing, session?.id]);
 
-  // авто-прерывание по таймеру (клиентский страж, сервер дублирует)
   useEffect(() => {
     if (!session || (session.stage !== "qa" && session.stage !== "coding")) return;
     const left = (session.startedAt + session.durationMs) - Date.now();
     if (left <= 0) {
-      // уже истёк
       apiFetch(`${API}/api/mock/finish`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId: session.id }),
@@ -900,24 +856,18 @@ export default function MockInterview() {
         body: JSON.stringify({ sessionId: session.id }),
       });
       setSession(s);
-    } catch (e) {
-      console.error("abort failed:", e.message);
-    } finally {
-      setConfirmAbort(false);
-    }
+    } catch (e) { console.error("abort failed:", e.message); }
+    finally { setConfirmAbort(false); }
   };
 
   const askAbort = () => setConfirmAbort(true);
 
-  if (!session) {
-    return <Setup onStart={setSession} rateLimit={rateLimit} meta={meta} />;
-  }
+  if (!session) return <Setup onStart={setSession} rateLimit={rateLimit} meta={meta} />;
 
-  // финал и/или ожидание подсчёта
   if (session.stage === "finished" || session.stage === "aborted") {
     if (finalizing || !session.finalReport) {
       return (
-        <div style={{ maxWidth: 600, margin: "80px auto", textAlign: "center", padding: 24 }}>
+        <div style={{ maxWidth: 600, margin: "0 auto", padding: `${PAGE_TOP} 24px 32px`, textAlign: "center" }}>
           <Crumb stage="result" />
           <div style={{ ...brBox, padding: 32, boxShadow: "8px 8px 0 var(--accent)" }}>
             <div style={{ fontSize: 18, fontWeight: 900, letterSpacing: "0.05em", marginBottom: 10 }}>
@@ -933,18 +883,9 @@ export default function MockInterview() {
 
   return (
     <>
-      {session.stage === "qa" && (
-        <ChatStage session={session} onUpdate={setSession} onAbort={askAbort} />
-      )}
-      {session.stage === "coding" && (
-        <CodingStage session={session} onUpdate={setSession} onAbort={askAbort} />
-      )}
-      {confirmAbort && (
-        <ConfirmModal
-          onCancel={() => setConfirmAbort(false)}
-          onConfirm={doAbort}
-        />
-      )}
+      {session.stage === "qa" && (<ChatStage session={session} onUpdate={setSession} onAbort={askAbort} />)}
+      {session.stage === "coding" && (<CodingStage session={session} onUpdate={setSession} onAbort={askAbort} />)}
+      {confirmAbort && (<ConfirmModal onCancel={() => setConfirmAbort(false)} onConfirm={doAbort} />)}
     </>
   );
 }
