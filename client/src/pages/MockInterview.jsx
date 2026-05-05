@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:4000";
@@ -45,7 +45,6 @@ const btnDanger = {
   borderColor: "#ff5b00", fontWeight: 800, letterSpacing: "0.06em", cursor: "pointer",
 };
 
-/* Единый верхний отступ, чтобы не срасталось с навбаром */
 const PAGE_TOP = "112px";
 
 function Crumb({ stage }) {
@@ -275,7 +274,7 @@ function TopBar({ session, onAbort, label }) {
   );
 }
 
-/* ------------------------------- QA Stage (FIX высоты) ------------------------------- */
+/* ------------------------------- QA Stage ------------------------------- */
 
 function ChatStage({ session, onUpdate, onAbort }) {
   const [draft, setDraft] = useState("");
@@ -320,7 +319,6 @@ function ChatStage({ session, onUpdate, onAbort }) {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 320px", gap: 20 }}>
-        {/* Чат — ФИКСИРОВАННАЯ высота, не разрастается */}
         <div style={{ ...brBox, padding: 0 }} className="mock-chat-shell">
           <div
             ref={scrollerRef}
@@ -500,13 +498,13 @@ function CodingStage({ session, onUpdate, onAbort }) {
               value={code}
               onChange={(e) => setCode(e.target.value)}
               spellCheck={false}
-              rows={20}
+              rows={14}
               style={{
                 width: "100%", padding: 16, boxSizing: "border-box",
                 fontFamily: "'JetBrains Mono', 'Fira Code', ui-monospace, monospace",
                 fontSize: 14, lineHeight: 1.6, background: "transparent",
                 color: "var(--fg)", border: "none", outline: "none", resize: "vertical",
-                minHeight: 420,
+                minHeight: 300,
               }}
             />
           </div>
@@ -578,7 +576,7 @@ const RANK_THEMES = {
   SSS: { top:"#ffdff0", mid:"#ff5ca6", bot:"#8e0750", glow:"rgba(255,26,140,1.0)",   accent:"#FF1A8C",   label:"SMOKIN' SEXY STYLE!!!" },
 };
 
-function DMCRankLetter({ targetRank, size = "clamp(110px, 14vw, 160px)" }) {
+function DMCRankLetter({ targetRank, size = "clamp(80px, 12vw, 140px)" }) {
   const targetIdx = Math.max(0, RANK_ORDER.indexOf(targetRank));
   const [idx, setIdx] = useState(0);
   const [settled, setSettled] = useState(targetIdx === 0);
@@ -614,178 +612,121 @@ function DMCRankLetter({ targetRank, size = "clamp(110px, 14vw, 160px)" }) {
   );
 }
 
-/* ------------------------------- Result (компактная карточка) ------------------------------- */
+/* ------------------------------- Result (двухколоночный layout) ------------------------------- */
 
 function ResultStage({ session, onRestart }) {
   const r = session.finalReport;
-  const [introDone, setIntroDone] = useState(false);
-
-  useEffect(() => {
-    const t = setTimeout(() => setIntroDone(true), 850);
-    return () => clearTimeout(t);
-  }, []);
-
   if (!r) return null;
+
   const theme = RANK_THEMES[r.rank] ?? RANK_THEMES.D;
   const passed = r.verdict === "passed";
 
   return (
-    <div className="mock-root" style={{ position: "relative", padding: `${PAGE_TOP} 24px 24px` }}>
-      {!introDone && <div className="dmc-intro-overlay" aria-hidden="true" />}
+    <div className="mock-root" style={{ maxWidth: 1200, margin: "0 auto", padding: `${PAGE_TOP} 24px 40px` }}>
+      <Crumb stage="result" />
 
-      {/* Компактная квадратная карточка результата */}
-      <div
-        className="dmc-result-card"
-        style={{
-          "--dmc-accent": theme.accent,
-          "--dmc-card-bg": theme.glow,
-        }}
-      >
-        <div style={{ fontSize: 10, letterSpacing: "0.3em", opacity: 0.55, marginBottom: 10 }}>
-          {session.grade} · {session.directionLabel?.toUpperCase?.()} · JUNIOR
-          {session.stage === "aborted" ? " · ПРЕРВАНО" : ""}
-        </div>
-
-        {/* Двухколоночный grid: СЧЁТ слева, БУКВА справа */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "1fr auto",
-          alignItems: "center",
-          gap: 18,
-          minHeight: 180,
-        }}>
-          {/* Score */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
-            <div
-              data-testid="mock-final-score"
-              className="display"
-              style={{
-                fontSize: "clamp(64px, 9vw, 108px)",
-                lineHeight: 0.9,
-                color: "var(--fg)",
-                letterSpacing: "-0.04em",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {r.totalScore}
-              <span className="display" style={{ fontSize: "0.3em", opacity: 0.5, marginLeft: 4, letterSpacing: "0" }}>
-                /100
-              </span>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 32, alignItems: "start" }}>
+        {/* ЛЕВАЯ КОЛОНКА — фидбек */}
+        <div>
+          <div style={{ ...brBox, padding: 24, marginBottom: 24 }}>
+            <div style={{ fontSize: 11, letterSpacing: "0.15em", opacity: 0.6, marginBottom: 10 }}>
+              ФИДБЕК ОТ ДЖАРВИСА
             </div>
-            <div
-              className="display"
-              style={{
-                fontSize: "clamp(14px, 1.7vw, 18px)",
-                color: theme.accent,
-                letterSpacing: "0.1em",
-                marginTop: 2,
-              }}
-            >
-              {r.rankLabel || theme.label}
-            </div>
+            <div style={{ fontSize: 16, lineHeight: 1.6 }}>{r.summary}</div>
+            {(r.strengths?.length > 0 || r.weaknesses?.length > 0) && (
+              <div style={{ marginTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {r.strengths?.map((s, i) => <Tag key={`s${i}`} color="#34d399">+ {s}</Tag>)}
+                {r.weaknesses?.map((w, i) => <Tag key={`w${i}`} color="#ff5b00">- {w}</Tag>)}
+              </div>
+            )}
           </div>
 
-          {/* Letter */}
-          <div style={{
-            display: "flex", alignItems: "center", justifyContent: "center",
-            width: 170, height: 170, flexShrink: 0,
-          }}>
-            <DMCRankLetter targetRank={r.rank} size="clamp(110px, 13vw, 150px)" />
-          </div>
-        </div>
-
-        <div style={{
-          display: "inline-block", padding: "5px 12px", marginTop: 14,
-          background: passed ? "#34d399" : "#ff5b00", color: "#000",
-          fontWeight: 900, letterSpacing: "0.15em", fontSize: 11,
-        }}>
-          {passed ? "✓ ОФФЕР ВЕРОЯТЕН" : "× ПОКА НЕТ"}
-        </div>
-      </div>
-
-      {/* Фидбек */}
-      <div
-        style={{
-          maxWidth: 1100, margin: "36px auto 0", padding: "0 0 40px",
-          animation: "ppFadeUp 0.6s ease-out 0.85s both",
-        }}
-      >
-        <Crumb stage="result" />
-
-        <div style={{ ...brBox, padding: 24, marginBottom: 24 }}>
-          <div style={{ fontSize: 11, letterSpacing: "0.15em", opacity: 0.6, marginBottom: 10 }}>
-            ФИДБЕК ОТ ДЖАРВИСА
-          </div>
-          <div style={{ fontSize: 16, lineHeight: 1.6 }}>{r.summary}</div>
-          {(r.strengths?.length > 0 || r.weaknesses?.length > 0) && (
-            <div style={{ marginTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {r.strengths?.map((s, i) => <Tag key={`s${i}`} color="#34d399">+ {s}</Tag>)}
-              {r.weaknesses?.map((w, i) => <Tag key={`w${i}`} color="#ff5b00">− {w}</Tag>)}
+          {(session.coding?.length > 0) && (
+            <div style={{ ...brBox, padding: 24, marginBottom: 24 }}>
+              <div style={{ fontSize: 11, letterSpacing: "0.15em", opacity: 0.6, marginBottom: 14 }}>ЛАЙВ-КОДИНГ</div>
+              {session.coding.map((c, i) => {
+                const ok = c.testsTotal > 0 && c.testsPassed === c.testsTotal;
+                return (
+                  <div key={i} style={{
+                    display: "flex", alignItems: "center", gap: 12, marginBottom: 10,
+                    padding: 10, border: `2px solid ${ok ? "#34d399" : "#ff5b00"}`,
+                  }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 800 }}>{c.title}</div>
+                      {c.errorSample && (
+                        <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2 }}>{c.errorSample}</div>
+                      )}
+                    </div>
+                    <div style={{ fontWeight: 900, color: ok ? "#34d399" : "#ff5b00" }}>
+                      {c.testsPassed} / {c.testsTotal}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
+
+          {r.toImprove?.length > 0 && (
+            <div style={{ ...brBox, padding: 24, marginBottom: 24 }}>
+              <div style={{ fontSize: 11, letterSpacing: "0.15em", opacity: 0.6, marginBottom: 14 }}>
+                ЧТО ПОДТЯНУТЬ В ПЕРВУЮ ОЧЕРЕДЬ
+              </div>
+              <ol style={{ margin: 0, paddingLeft: 20, fontSize: 15, lineHeight: 1.6 }}>
+                {r.toImprove.map((t, i) => <li key={i} style={{ marginBottom: 6 }}>{t}</li>)}
+              </ol>
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <button data-testid="mock-restart-btn" onClick={onRestart} style={btnPrimary}>ПРОЙТИ ЕЩЁ РАЗ ↗</button>
+            <Link to="/tests" style={{ ...btnGhost, textDecoration: "none", display: "inline-block" }}>К ТЕСТАМ</Link>
+          </div>
         </div>
 
-        {(session.coding?.length > 0) && (
-          <div style={{ ...brBox, padding: 24, marginBottom: 24 }}>
-            <div style={{ fontSize: 11, letterSpacing: "0.15em", opacity: 0.6, marginBottom: 14 }}>ЛАЙВ-КОДИНГ</div>
-            {session.coding.map((c, i) => {
-              const ok = c.testsTotal > 0 && c.testsPassed === c.testsTotal;
-              return (
-                <div key={i} style={{
-                  display: "flex", alignItems: "center", gap: 12, marginBottom: 10,
-                  padding: 10, border: `2px solid ${ok ? "#34d399" : "#ff5b00"}`,
-                }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 800 }}>{c.title}</div>
-                    {c.errorSample && (
-                      <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2 }}>{c.errorSample}</div>
-                    )}
-                  </div>
-                  <div style={{ fontWeight: 900, color: ok ? "#34d399" : "#ff5b00" }}>
-                    {c.testsPassed} / {c.testsTotal}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        {/* ПРАВАЯ КОЛОНКА — просто буква + инфо, без карточки */}
+        <div style={{ position: "sticky", top: 120, display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 20 }}>
+          <DMCRankLetter targetRank={r.rank} size="clamp(100px, 14vw, 160px)" />
 
-        {r.toImprove?.length > 0 && (
-          <div style={{ ...brBox, padding: 24, marginBottom: 24 }}>
-            <div style={{ fontSize: 11, letterSpacing: "0.15em", opacity: 0.6, marginBottom: 14 }}>
-              ЧТО ПОДТЯНУТЬ В ПЕРВУЮ ОЧЕРЕДЬ
-            </div>
-            <ol style={{ margin: 0, paddingLeft: 20, fontSize: 15, lineHeight: 1.6 }}>
-              {r.toImprove.map((t, i) => <li key={i} style={{ marginBottom: 6 }}>{t}</li>)}
-            </ol>
+          <div style={{
+            fontFamily: "'Archivo Black', sans-serif",
+            fontSize: "clamp(18px, 2.5vw, 26px)",
+            color: theme.accent,
+            letterSpacing: "0.08em",
+            marginTop: 18,
+            textTransform: "uppercase",
+          }}>
+            {r.rankLabel || theme.label}
           </div>
-        )}
 
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <button data-testid="mock-restart-btn" onClick={onRestart} style={btnPrimary}>ПРОЙТИ ЕЩЁ РАЗ ↗</button>
-          <Link to="/tests" style={{ ...btnGhost, textDecoration: "none", display: "inline-block" }}>К ТЕСТАМ</Link>
+          <div style={{
+            fontSize: 10, letterSpacing: "0.25em", opacity: 0.5, marginTop: 8,
+          }}>
+            {session.directionLabel?.toUpperCase?.()} · {session.grade?.toUpperCase?.()}
+          </div>
+
+          <div style={{ marginTop: 24 }}>
+            <span
+              data-testid="mock-final-score"
+              className="display"
+              style={{ fontSize: "clamp(48px, 7vw, 72px)", lineHeight: 0.9, color: "var(--fg)" }}
+            >
+              {r.totalScore}
+            </span>
+            <span className="display" style={{ fontSize: 18, opacity: 0.5, marginLeft: 4 }}>/100</span>
+          </div>
+
+          <div style={{
+            display: "inline-block", padding: "5px 12px", marginTop: 16,
+            background: passed ? "#34d399" : "#ff5b00", color: "#000",
+            fontWeight: 900, letterSpacing: "0.15em", fontSize: 11,
+          }}>
+            {passed ? "✓ ОФФЕР" : "× ПОКА НЕТ"}
+          </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes ppFadeUp {
-          0%   { opacity: 0; transform: translateY(14px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   );
 }
-
-function Tag({ children, color }) {
-  return (
-    <span style={{
-      padding: "4px 10px", fontSize: 11, letterSpacing: "0.1em",
-      border: `2px solid ${color}`, color, fontWeight: 700,
-    }}>{children}</span>
-  );
-}
-
 /* ------------------------------- Page root ------------------------------- */
 
 export default function MockInterview() {

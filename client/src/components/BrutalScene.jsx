@@ -48,16 +48,6 @@ const TEXTURES = {
       ctx.beginPath(); ctx.arc(rnd()*w, rnd()*h, 1 + rnd()*2, 0, Math.PI*2); ctx.fill();
     }
   }),
-  mercury: () => makeTex((ctx, w, h) => {
-    const g = ctx.createLinearGradient(0, 0, 0, h);
-    g.addColorStop(0, "#8a7f70"); g.addColorStop(1, "#5a5248");
-    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
-    const rnd = seededRand(23);
-    for (let i = 0; i < 70; i++) {
-      ctx.fillStyle = `rgba(30,22,16,${0.3 + rnd()*0.45})`;
-      ctx.beginPath(); ctx.arc(rnd()*w, rnd()*h, 1.5 + rnd()*5, 0, Math.PI*2); ctx.fill();
-    }
-  }),
   venus: () => makeTex((ctx, w, h) => {
     const g = ctx.createLinearGradient(0, 0, 0, h);
     g.addColorStop(0, "#f0c987"); g.addColorStop(0.5, "#d89853"); g.addColorStop(1, "#9c632b");
@@ -190,13 +180,11 @@ export default function BrutalScene({ theme = "dark" }) {
     const stars = new THREE.Points(starsGeom, starsMat);
     root.add(stars);
 
-    // ===== НАСТРОЙКА ПЛАНЕТ =====
-    // tintOpacity: насколько плотная цветная "заливка" поверх текстуры.
-    //   0.0 = не видно тинта, 0.2 = лёгкий оттенок,
-    //   0.5 = выраженный цвет, 0.7+ = текстура почти не просвечивает.
+    // ===== ПЛАНЕТЫ =====
+    // Меркурий убран: при низком pixelRatio он рендерился пиксельным
+    // серым квадратом и казался "летающим кубом, следующим за курсором".
     const planetsData = [
       { name:"sun",     tex:"sun",     pos:[0, 2.8, -14],   radius:2.4,  segs:24, paletteIdx:0, speed:0.04, orbit:0.0,  tintOpacity:0.15 },
-      { name:"mercury", tex:"mercury", pos:[-7,-1.2,-4],    radius:0.45, segs:14, paletteIdx:1, speed:0.22, orbit:0.35, tintOpacity:0.20 },
       { name:"venus",   tex:"venus",   pos:[-3.6, 1.8,-3],  radius:0.75, segs:18, paletteIdx:2, speed:0.15, orbit:0.25, tintOpacity:0.25 },
       { name:"earth",   tex:"earth",   pos:[5.2, 0.6,-5],   radius:0.95, segs:20, paletteIdx:3, speed:0.18, orbit:0.3,  tintOpacity:0.80 },
       { name:"mars",    tex:"mars",    pos:[3,-1.6,-2.5],   radius:0.6,  segs:16, paletteIdx:2, speed:0.2,  orbit:0.28, tintOpacity:0.25 },
@@ -220,7 +208,7 @@ export default function BrutalScene({ theme = "dark" }) {
       const tintMat = new THREE.MeshBasicMaterial({
         color: "#ffffff",
         transparent: true,
-        opacity: p.tintOpacity ?? 0.22,   // ← индивидуально для каждой планеты
+        opacity: p.tintOpacity ?? 0.22,
         depthWrite: false,
       });
       const tint = new THREE.Mesh(tintGeo, tintMat);
@@ -319,8 +307,10 @@ export default function BrutalScene({ theme = "dark" }) {
         g.position.x = u.basePos[0] + Math.cos(t*0.25 + u.phase) * o;
         g.position.y = u.basePos[1] + Math.sin(t*0.35 + u.phase) * o * 0.7;
       });
-      root.rotation.y += (mouse.x*0.4 - root.rotation.y) * 0.04;
-      root.rotation.x += (mouse.y*0.2 - root.rotation.x) * 0.04;
+      // Существенно смягчили реакцию сцены на курсор —
+      // больше нет ощущения, что геометрия "следует" за мышкой.
+      root.rotation.y += (mouse.x*0.12 - root.rotation.y) * 0.02;
+      root.rotation.x += (mouse.y*0.06 - root.rotation.x) * 0.02;
       renderer.render(scene, camera);
       raf = requestAnimationFrame(animate);
     };
