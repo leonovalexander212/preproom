@@ -1,6 +1,5 @@
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import type { TestCase } from './codeJudge';
 
 export interface MdTask {
@@ -13,34 +12,40 @@ export interface MdTask {
   tests: TestCase[];
 }
 
-// Папка `questions/` лежит в корне репозитория, рядом с `server/` и `client/`.
-// __dirname в TS-собранном коде = .../server/dist/lib (или /server/src/lib при ts-node).
-// Поднимаемся вверх, пока не найдём `questions/`.
+// Папка `questions/` лежит в корне репо, рядом с `server/` и `client/`.
+// Ищем её, поднимаясь вверх от __dirname и от cwd.
 function findQuestionsRoot(): string {
   const explicit = process.env.QUESTIONS_DIR;
   if (explicit && existsSync(explicit)) return explicit;
 
-  let dir = dirname(fileURLToPath(import.meta.url));
-  for (let i = 0; i < 8; i++) {
-    const candidate = join(dir, 'questions');
-    if (existsSync(candidate)) return candidate;
-    dir = dirname(dir);
-  }
-  // Fallback (CJS / классический require)
-  let cjs = typeof __dirname !== 'undefined' ? __dirname : process.cwd();
-  for (let i = 0; i < 8; i++) {
-    const candidate = join(cjs, 'questions');
-    if (existsSync(candidate)) return candidate;
-    cjs = dirname(cjs);
-  }
-  throw new Error(`Folder "questions/" not found near server bundle`);
+  const tried: string[] = [];
+
+  const climb = (start: string) => {
+    let dir = start;
+    for (let i = 0; i < 8; i++) {
+      const candidate = join(dir, 'questions');
+      tried.push(candidate);
+      if (existsSync(candidate)) return candidate;
+      const parent = dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+    return null;
+  };
+
+  const a = climb(__dirname);
+  if (a) return a;
+  const b = climb(process.cwd());
+  if (b) return b;
+
+  throw new Error(`Folder "questions/" not found. Tried: ${tried.join(', ')}`);
 }
 
 function parseFrontmatter(raw: string): { fm: Record<string, string>; body: string } {
-  const m = raw.match(/^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/);
+  const m = raw.match(/^---\s*\r?\n([\s\S]*?)\r?\n---\s*\r?\n([\s\S]*)$/);
   if (!m) return { fm: {}, body: raw };
   const fm: Record<string, string> = {};
-  for (const line of m[1].split('\n')) {
+  for (const line of m[1].split(/\r?\n/)) {
     const idx = line.indexOf(':');
     if (idx === -1) continue;
     const key = line.slice(0, idx).trim();
@@ -51,15 +56,15 @@ function parseFrontmatter(raw: string): { fm: Record<string, string>; body: stri
 }
 
 function extractBetweenHeading(body: string, heading: string): string {
-  const re = new RegExp(`^#\\s+${heading}\\s*\\n([\\s\\S]*?)(?=^#\\s+|\\Z)`, 'mi');
+  const re = new RegExp(`^#\\s+${heading}\\s*\\r?\\n([\\s\\S]*?)(?=^#\\s+|$(?![\\s\\S]))`, 'mi');
   const m = body.match(re);
   return m ? m[1].trim() : '';
 }
 
 function extractFirstFencedBlock(text: string, lang?: string): string {
   const re = lang
-    ? new RegExp('```' + lang + '\\s*\\n([\\s\\S]*?)```', 'm')
-    : /```[a-z0-9]*\s*\n([\s\S]*?)```/m;
+    ? new RegExp('```' + lang + '\\s*\\r?\\n([\\s\\S]*?)```', 'm')
+    : /```[a-z0-9]*\s*\r?\n([\s\S]*?)```/m;
   const m = text.match(re);
   return m ? m[1] : '';
 }
@@ -104,7 +109,7 @@ export function loadTasks(directionDbSlug: string, grade: string): MdTask[] {
   const root = findQuestionsRoot();
   const dir = join(root, directionDbSlug, grade.toLowerCase());
   if (!existsSync(dir)) {
-    console.warn(`[mdLoader] no folder for ${directionDbSlug}/${grade.toLowerCase()}`);
+    console.warn(`[mdLoader] no folder for ${directionDbSlug}/${grade.toLowerCase()} (root=${root})`);
     return [];
   }
   return readdirSync(dir)

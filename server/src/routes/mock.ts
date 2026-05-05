@@ -1,4 +1,4 @@
-// AI Mock Interview — реальные вопросы из БД + лайв-кодинг через Piston.
+// AI Mock Interview — реальные вопросы из БД + лайв-кодинг через LLM-судью.
 // Финальная оценка от Джарвиса (Groq llama-3.3-70b) — ранг в стиле Devil May Cry.
 
 import { Router, Request, Response } from 'express';
@@ -66,7 +66,9 @@ function rankFromScore(score: number): { rank: 'D'|'C'|'B'|'A'|'S'|'SS'|'SSS'; l
   return { rank: 'D', label: 'DULL' };
 }
 
-const MIN_TECH_PER_INTERVIEW = 16;
+// ВАЖНО: берём первые 15 технических (без soft/поведенческих) — на одно видео-интервью.
+const MIN_TECH_PER_INTERVIEW = 15;
+const MAX_TECH_PER_INTERVIEW = 15;
 const CODING_TASKS_PER_SESSION = 2;
 
 /* --------------------------- public meta --------------------------- */
@@ -96,11 +98,9 @@ router.post('/start', async (req: Request, res: Response) => {
 
   const meta = getDirectionMeta(direction);
 
-  // 1) находим направление в БД
   const dbDir = await prisma.direction.findUnique({ where: { slug: meta.dbSlug } });
   if (!dbDir) return res.status(500).json({ error: 'db_direction_missing', message: `slug ${meta.dbSlug} не найден в БД` });
 
-  // 2) находим интервью с >= MIN_TECH_PER_INTERVIEW техническими вопросами и нужным грейдом
   const interviews = await prisma.interview.findMany({
     where: {
       directionId: dbDir.id,
@@ -132,14 +132,16 @@ router.post('/start', async (req: Request, res: Response) => {
 
   const picked = eligible[Math.floor(Math.random() * eligible.length)];
 
-  const questions: MockQuestionRuntime[] = picked.questions.map((iq) => ({
+  // Берём ровно первые 15 технических вопросов (или сколько есть, но не больше).
+  const limited = picked.questions.slice(0, MAX_TECH_PER_INTERVIEW);
+
+  const questions: MockQuestionRuntime[] = limited.map((iq) => ({
     id: iq.question.id,
     text: iq.question.text,
     topic: iq.question.topic?.name ?? meta.label,
     kind: 'theory',
   }));
 
-  // 3) живые задачи из MD
   const allTasks = loadTasks(meta.dbSlug, grade);
   if (allTasks.length < CODING_TASKS_PER_SESSION) {
     return res.status(500).json({
@@ -158,7 +160,6 @@ router.post('/start', async (req: Request, res: Response) => {
     testsCount: t.tests.length,
   }));
 
-  // 4) только ТУТ списываем попытку
   const ip = clientIp(req);
   if (!tryConsume(ip)) {
     const status = rateLimitStatus(ip);
@@ -170,16 +171,14 @@ router.post('/start', async (req: Request, res: Response) => {
     questions, codingTasks: codingRuntime,
     sourceInterviewTitle: picked.title,
   });
-  // запоминаем MD-задачи в global map для /coding (нужно вытаскивать тесты на сабмите)
   TASKS_BY_SESSION.set(session.id, new Map(pickedTasks.map((t) => [t.id, t])));
 
   res.json(serializeForClient(session));
 });
 
-// Хранилище MD-задач (с тестами) по sessionId — тесты НЕ ходят на клиент
 const TASKS_BY_SESSION = new Map<string, Map<string, MdTask>>();
 
-/* --------------------------- answer (без ревью) --------------------------- */
+/* --------------------------- answer --------------------------- */
 
 const answerSchema = z.object({
   sessionId: z.string(),
@@ -284,41 +283,42 @@ router.post('/abort', (req: Request, res: Response) => {
   const sessionId = String(req.body?.sessionId ?? '');
   const session = abortSession(sessionId);
   if (!session) return res.status(404).json({ error: 'session_not_found' });
-  // попытка не возвращается — анти-абуз
   res.json(serializeForClient(session));
 });
 
-/* --------------------------- finish (Джарвис, итоговая оценка) --------------------------- */
+/* --------------------------- finish --------------------------- */
 
-const FINAL_SYSTEM = `Ты — Джарвис, строгий технический интервьюер уровня tech lead. Сейчас сводишь итог собеседования.
-Ты НЕ давал ревью на каждый ответ — оцениваешь как на экзамене, по совокупности.
-Учитывай:
-- техническую точность каждого ответа,
-- глубину и структуру,
-- результаты автоматических тестов на лайв-кодинге (testsPassed/testsTotal — это объективный сигнал),
-- что собеседование может быть прервано по таймеру (тогда часть вопросов без ответа).
+const FINAL_SYSTEM = `Ты — Джарвис, предельно строгий технический интервьюер уровня tech lead. Сейчас сводишь итог собеседования.
+Оцениваешь как на экзамене по совокупности.
+
+КРИТИЧЕСКИЕ ПРАВИЛА ОЦЕНКИ (следуй им ЖЁСТКО, без снисхождения):
+- Если ответ это БЕССМЫСЛЕННЫЙ набор символов, случайные цифры/буквы, одно слово без контента,
+  "не знаю", "хз", "asdf", "123", пустые отписки — этот ответ = 0 баллов.
+- Если КАЖДЫЙ или ПОЧТИ КАЖДЫЙ ответ — бессмыслица/мусор: totalScore ОБЯЗАТЕЛЬНО 0..8.
+- Если больше половины ответов — мусор: totalScore максимум 0..15.
+- Если ответы короткие но по делу (1-2 корректных предложения) — totalScore максимум 30..45.
+- Только развёрнутые технически точные ответы с терминологией и примерами дают 60+.
+- Объективные тесты лайв-кодинга (testsPassed/testsTotal) — это жёсткий сигнал. 0 пройденных из N дают -20 к итогу.
+- Прерванное собеседование: totalScore максимум 35.
 
 ФОРМАТ (СТРОГО JSON, без markdown):
 {
   "totalScore": <0..100>,
   "verdict": "passed" | "failed",
   "summary": "<3-5 предложений на русском, как фидбек после собеса>",
-  "strengths":  ["<коротко>", ...],   // 0-4
-  "weaknesses": ["<коротко>", ...],   // 0-4
-  "toImprove":  ["<совет>", ...]       // 2-5
+  "strengths":  ["<коротко>", ...],
+  "weaknesses": ["<коротко>", ...],
+  "toImprove":  ["<совет>", ...]
 }
 
-verdict=passed только при totalScore >= 60.`;
+verdict=passed только при totalScore >= 60. Не жалей кандидата — честная оценка важнее.`;
 
 router.post('/finish', async (req: Request, res: Response) => {
   const sessionId = String(req.body?.sessionId ?? '');
   const session = getSession(sessionId);
   if (!session) return res.status(404).json({ error: 'session_not_found' });
 
-  // если уже подсчитан — вернуть как есть
   if (session.finalReport) return res.json(serializeForClient(session));
-
-  // принудительно закрываем стадии
   if (session.stage !== 'aborted') session.stage = 'finished';
 
   const qaBlock = session.answers.map((a, i) =>
@@ -357,7 +357,6 @@ ${codingBlock || '(не было задач)'}
     }>(FINAL_SYSTEM, userPrompt, 0.25);
   } catch (e: any) {
     console.error('mock/finish ai error', e);
-    // Деградация: считаем по тестам если LLM не отвечает
     const codingScore = session.coding.length === 0 ? 0
       : (session.coding.reduce((s, c) => s + (c.testsTotal ? c.testsPassed / c.testsTotal : 0), 0) / session.coding.length) * 100;
     const qaCoverage = session.questions.length === 0 ? 0 : (session.answers.length / session.questions.length) * 100;
@@ -390,15 +389,11 @@ ${codingBlock || '(не было задач)'}
   res.json(serializeForClient(session));
 });
 
-/* --------------------------- get session --------------------------- */
-
 router.get('/session/:id', (req, res) => {
   const session = getSession(req.params.id);
   if (!session) return res.status(404).json({ error: 'session_not_found' });
   res.json(serializeForClient(session));
 });
-
-/* --------------------------- serializer --------------------------- */
 
 function serializeForClient(s: MockSession) {
   const currentQuestion = s.stage === 'qa' ? s.questions[s.currentQuestionIdx] ?? null : null;
