@@ -50,10 +50,27 @@ const btnDanger = {
 const PAGE_TOP = "112px";
 
 function Crumb({ stage }) {
-  const map = { setup: "НАСТРОЙКА", qa: "ВОПРОСЫ", coding: "ЛАЙВ-КОДИНГ", result: "РЕЗУЛЬТАТ", aborted: "ПРЕРВАНО" };
+  // НАСТРОЙКА убрана из карты — на этапе setup третий сегмент не показывается
+  const map = { qa: "ВОПРОСЫ", coding: "ЛАЙВ-КОДИНГ", result: "РЕЗУЛЬТАТ", aborted: "ПРЕРВАНО" };
+  const label = map[stage];
+  const linkStyle = {
+    color: "inherit",
+    textDecoration: "none",
+    transition: "color 140ms ease, opacity 140ms ease",
+    cursor: "pointer",
+  };
+  const onEnter = (e) => { e.currentTarget.style.color = "var(--accent, #e5ff00)"; };
+  const onLeave = (e) => { e.currentTarget.style.color = "inherit"; };
+
   return (
     <div style={{ fontSize: 12, opacity: 0.6, letterSpacing: "0.12em", marginBottom: 16 }}>
-      › ТЕСТЫ / AI MOCK / {map[stage] ?? stage}
+      <span>› </span>
+      <Link to="/tests" data-testid="crumb-tests" style={linkStyle}
+            onMouseEnter={onEnter} onMouseLeave={onLeave}>ТЕСТЫ</Link>
+      <span> / </span>
+      <Link to="/mock" data-testid="crumb-mock" style={linkStyle}
+            onMouseEnter={onEnter} onMouseLeave={onLeave}>AI MOCK</Link>
+      {label && (<><span> / </span><span>{label}</span></>)}
     </div>
   );
 }
@@ -351,7 +368,7 @@ function ChatStage({ session, onUpdate, onAbort }) {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={onKey}
-              placeholder="Отвечай развёрнуто, как на реальном собесе. Джарвис не комментирует — итог в конце."
+              placeholder="Отвечай развёрнуто, как на реальном собесе."
               rows={4}
               style={{
                 width: "100%", padding: 12, fontFamily: "inherit", fontSize: 14,
@@ -379,8 +396,8 @@ function ChatStage({ session, onUpdate, onAbort }) {
           <div style={{ ...brBox, padding: 18 }}>
             <div style={{ fontSize: 11, letterSpacing: "0.15em", opacity: 0.6, marginBottom: 8 }}>ДЖАРВИС</div>
             <div style={{ fontSize: 13, lineHeight: 1.55, opacity: 0.85 }}>
-              Веду собеседование строго, как на оффер. Ревью не даю по ходу — итог объявлю в конце.
-              Прервёшь — попытка списывается.
+              Веду собеседование строго!
+              Еслирервёшь — попытка списывается.
             </div>
           </div>
           <div style={{ ...brBox, padding: 18 }}>

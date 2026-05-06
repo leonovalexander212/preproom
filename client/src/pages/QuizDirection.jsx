@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../lib/api.js";
 
 const QUESTIONS = [
@@ -113,12 +113,50 @@ function CircleButton({ size, color, onClick }) {
 
 function QuestionStage({ step, total, q, onPick, onBack }) {
   const progress = (step / total) * 100;
+  const navigate = useNavigate();
+
+  const onExit = () => {
+    if (step > 0 && !window.confirm("Выйти из теста? Прогресс не сохранится.")) return;
+    navigate("/tests");
+  };
 
   return (
-    <div style={{ minHeight: 560, display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: 560, display: "flex", flexDirection: "column", position: "relative" }}>
+      {/* фикс: кнопка выхода справа сверху — стиль такой же, как у "ПРЕРВАТЬ СОБЕС" в моке */}
+      <button
+        type="button"
+        data-testid="quiz-exit-btn"
+        onClick={onExit}
+        style={{
+          position: "absolute", top: 650, right: 0, zIndex: 5,
+          padding: "10px 16px",
+          background: "transparent", color: "#ff5b00",
+          border: "2px solid #ff5b00",
+          fontWeight: 800, letterSpacing: "0.06em", cursor: "pointer",
+          fontFamily: "inherit", fontSize: 13,
+          boxShadow: "4px 4px 0 #ff5b00",
+          transition: "transform 140ms ease, background 140ms ease, color 140ms ease",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = "#ff5b00";
+          e.currentTarget.style.color = "#000";
+          e.currentTarget.style.transform = "translate(-2px,-2px)";
+          e.currentTarget.style.boxShadow = "6px 6px 0 #000";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = "transparent";
+          e.currentTarget.style.color = "#ff5b00";
+          e.currentTarget.style.transform = "translate(0,0)";
+          e.currentTarget.style.boxShadow = "4px 4px 0 #ff5b00";
+        }}
+      >
+        ✕ НАЗАД
+      </button>
+
       <div className="mono" style={{
         display: "flex", justifyContent: "space-between", color: "var(--muted)",
-        fontSize: 11, letterSpacing: "0.22em", marginBottom: 18
+        fontSize: 11, letterSpacing: "0.22em", marginBottom: 18,
+        paddingRight: 110, // чтобы шапка не залезала под кнопку
       }}>
         <span>ВОПРОС {step + 1} / {total}</span>
         <span style={{ color: "#24c57f" }}>ТЕСТ · НАПРАВЛЕНИЕ</span>

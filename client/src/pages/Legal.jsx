@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../lib/api.js";
 
-function Page({ title, kicker = "› ИНФОРМАЦИЯ", children }) {
+function Page({ title, kicker = "› ВСЯ ИНФА", children }) {
   return (
     <div style={{ paddingTop: 120, maxWidth: 880, margin: "0 auto", padding: "140px 28px 80px" }}>
       <div className="mono" style={{ color: "var(--accent-ink)", letterSpacing: "0.22em", fontSize: 11, marginBottom: 14 }}>
         {kicker}
       </div>
-      <h1 className="display" style={{ fontSize: "clamp(48px, 7vw, 110px)", margin: 0, lineHeight: 0.95 }}>
+        <h1 className="display" style={{ fontSize: "clamp(40px, 5.6vw, 88px)", margin: 0, lineHeight: 0.95 }}>
         {title}
       </h1>
       <div style={{ marginTop: 30, color: "var(--fg-dim)", fontSize: 15, lineHeight: 1.75 }}>
@@ -32,61 +32,117 @@ const Meta = ({ children }) => (
 
 /* ==================== DOCS ==================== */
 export const DocsPage = () => (
-  <Page title="ДОКУМЕНТАЦИЯ" kicker="› ДОКУМЕНТАЦИЯ">
-    <Meta>PREPROOM · REST API · V1</Meta>
-    <p>
-      PrepRoom предоставляет открытый REST API без авторизации. Все эндпоинты
-      находятся под префиксом <code>/api</code>, формат обмена — JSON (UTF-8).
-      Rate-limit по умолчанию — 60 запросов в минуту на IP.
-    </p>
+  <Page title="ДОКУМЕНТАЦИЯ">
+    <Meta>PREPROOM · REST + SSE · OBSERVE-ONLY · NO AUTH</Meta>
+
 
     <H3>Базовый URL</H3>
-    <p><code>https://api.preproom.app</code> (или локально <code>http://localhost:8001</code>)</p>
+    <ul>
+      <li><b>Production:</b> <code>https://api.preproom.app</code></li>
+      <li><b>Локально:</b> <code>http://localhost:4000</code> (Express + Prisma 7)</li>
+    </ul>
+
+    <H3>Rate limits</H3>
+    <ul>
+      <li>Общий лимит: <b>60 req/min на IP</b> для read-эндпоинтов.</li>
+      <li>AI-мок (<code>/api/mock/*</code>): <b>3 сессии на IP за 7 дней</b>. Состояние — в <code>GET /api/mock/rate-limit</code>.</li>
+      <li>AI-объяснение (<code>/api/ai/explain</code>): <b>20 запросов/час на IP</b>, т.к. под капотом платный OpenRouter.</li>
+    </ul>
 
     <H3>Направления</H3>
     <ul>
-      <li><code>GET /api/directions</code> — список всех направлений со счётчиками вопросов</li>
-      <li><code>GET /api/directions/:slug/questions</code> — вопросы выбранного направления</li>
+      <li><code>GET /api/directions</code> — список всех направлений со счётчиками вопросов и интервью.</li>
+      <li><code>GET /api/directions/:slug/questions</code> — вопросы направления. Процент вероятности считается <i>в контексте фильтров</i>: знаменатель сужается до интервью, где встречается выбранный грейд/тип.</li>
     </ul>
-    <p>Параметры фильтрации: <code>?type=TECHNICAL|BEHAVIORAL</code>, <code>?level=JUNIOR|MIDDLE|SENIOR</code>.</p>
+    <p>
+      Параметры: <code>?type=TECHNICAL|BEHAVIORAL|LOGIC_PUZZLE</code>,{" "}
+      <code>?level=JUNIOR|MIDDLE|SENIOR</code>,{" "}
+      <code>?search=строка</code>,{" "}
+      <code>?limit=50&offset=0</code>.
+    </p>
 
     <H3>Вопросы</H3>
     <ul>
-      <li><code>GET /api/questions/:id</code> — один вопрос с эталонным ответом</li>
-      <li><code>GET /api/questions/:id/video-answers</code> — список таймкодов из YouTube</li>
+      <li><code>GET /api/questions/:id</code> — один вопрос с эталонным ответом и типом (TECHNICAL / BEHAVIORAL / LOGIC_PUZZLE).</li>
+      <li><code>GET /api/questions/:id/video-answers</code> — таймкоды в YouTube-записях, где этот вопрос звучал.</li>
     </ul>
 
-    <H3>Интервью</H3>
+    <H3>Интервью (видео-источники)</H3>
     <ul>
-      <li><code>GET /api/interviews</code> — список записей собеседований</li>
-      <li>Поддерживает фильтры: <code>?direction=slug</code>, <code>?difficulty=JUNIOR</code></li>
+      <li><code>GET /api/interviews</code> — список записей, из которых собрана база.</li>
+    </ul>
+    <p>
+      Параметры: <code>?direction=slug</code>,{" "}
+      <code>?difficulty=JUNIOR|MIDDLE|SENIOR</code>.
+    </p>
+
+    <H3>AI-объяснение («Уточнить у ИИ»)</H3>
+    <p>
+      <code>POST /api/ai/explain</code> — Server-Sent Events (text/event-stream). В теле:{" "}
+      <code>{`{ questionId, messages: [{ role, content }] }`}</code>. Провайдер — OpenRouter,
+      модель выбирается сервером. События формата:
+    </p>
+    <pre>{`event: chunk
+data: {"type":"chunk","content":"..."}
+
+event: done
+data: {"type":"done","usage":{"promptTokens":...,"completionTokens":...}}`}</pre>
+
+    <H3>AI Mock Interview</H3>
+    <ul>
+      <li><code>GET /api/mock/rate-limit</code> — <code>{`{ remaining, limit, resetAt }`}</code>.</li>
+      <li><code>GET /api/mock/directions</code> — доступные пары <i>направление × грейд</i> (некоторые помечены <code>available: false</code>).</li>
+      <li><code>POST /api/mock/start</code> — <code>{`{ direction, grade }`}</code>, возвращает <code>session</code> с первым вопросом.</li>
+      <li><code>GET /api/mock/session/:id</code> — подтянуть текущее состояние (используется при F5).</li>
+      <li><code>POST /api/mock/answer</code> — <code>{`{ sessionId, answer }`}</code>, сдвигает на следующий QA-вопрос или на coding-фазу.</li>
+      <li><code>POST /api/mock/coding</code> — <code>{`{ sessionId, code }`}</code>, прогоняет скрытые тесты, возвращает <code>{`{ session, result: { testsPassed, testsTotal, errorSample } }`}</code>.</li>
+      <li><code>POST /api/mock/finish</code> — финализирует сессию, возвращает <code>finalReport</code>.</li>
+      <li><code>POST /api/mock/abort</code> — досрочное прерывание. Попытка <b>списывается</b>, но отчёт всё равно формируется по частичным данным.</li>
     </ul>
 
-    <H3>AI-объяснения</H3>
-    <p>
-      <code>POST /api/ai/explain</code> — стримовый (SSE) ответ. В теле передаётся{" "}
-      <code>{`{ questionId, messages }`}</code>. Возвращает события вида{" "}
-      <code>{`{ type: "chunk", content: "..." }`}</code>.
-    </p>
+    <H3>Health</H3>
+    <ul>
+      <li><code>GET /api/health</code> — <code>{`{ status: "ok", uptime, version }`}</code>. Используется страницей <i>STATUS</i>, пингуется раз в 30с.</li>
+    </ul>
 
     <H3>Примеры</H3>
-    <pre style={{
-      background: "var(--bg-2)", border: "2px solid var(--line)",
-      padding: 14, fontSize: 12, overflowX: "auto"
-    }}>
-{`curl https://api.preproom.app/api/directions
-curl https://api.preproom.app/api/directions/java/questions?level=MIDDLE`}
-    </pre>
+    <pre>{`# список направлений
+curl https://api.preproom.app/api/directions
+
+# вопросы Java на MIDDLE
+curl "https://api.preproom.app/api/directions/java/questions?level=MIDDLE&type=TECHNICAL"
+
+# старт мока Python / JUNIOR
+curl -X POST https://api.preproom.app/api/mock/start \\
+  -H "Content-Type: application/json" \\
+  -d '{"direction":"python","grade":"JUNIOR"}'
+
+# SSE-стрим AI-объяснения
+curl -N -X POST https://api.preproom.app/api/ai/explain \\
+  -H "Content-Type: application/json" \\
+  -d '{"questionId":"ckxyz...","messages":[{"role":"user","content":"объясни GIL"}]}'`}</pre>
 
     <H3>Ошибки</H3>
+    <ul>
+      <li><code>400</code> — неверные параметры или невалидное тело (Zod-валидация).</li>
+      <li><code>404</code> — объект не найден (вопрос/направление/сессия).</li>
+      <li><code>409</code> — конфликт состояния мока (например, ответ на уже завершённую сессию).</li>
+      <li><code>429</code> — превышен rate-limit (см. заголовки <code>X-RateLimit-*</code>).</li>
+      <li><code>500</code> — внутренняя ошибка (бывает при обрыве OpenRouter или падении раннера кода).</li>
+    </ul>
     <p>
-      Стандартные HTTP-коды: <code>400</code> — неверные параметры,{" "}
-      <code>404</code> — объект не найден, <code>429</code> — превышен rate-limit,{" "}
-      <code>500</code> — внутренняя ошибка.
+      Тело ошибки: <code>{`{ "error": "код", "message": "человекочитаемое описание" }`}</code>.
     </p>
+
+    <H3>Стек и внутрянка</H3>
+    <ul>
+      <li><b>Backend:</b> Node.js 20 + Express + TypeScript, PostgreSQL 16 + Prisma 7 с driver adapter <code>@prisma/adapter-pg</code> (без Rust-движка).</li>
+      <li><b>Embeddings:</b> Xenova multilingual-e5-small — локально, без внешнего API. Порог косинусной близости для дедупликации — <code>0.92</code>, union-find кластеризация.</li>
+      <li><b>LLM:</b> OpenAI SDK в конфигурации OpenRouter</li>
+      <li><b>Вероятность</b> вопросов считается на лету как <code>COUNT(DISTINCT interview_id) / total</code> с контекстным знаменателем под активные фильтры — цифра не «размывается» при сужении выборки.</li>
+    </ul>
   </Page>
 );
-
 /* ==================== PRIVACY ==================== */
 export const PrivacyPage = () => (
   <Page title="КОНФИДЕНЦИАЛЬНОСТЬ" kicker="› ВАЖНО">
@@ -100,9 +156,7 @@ export const PrivacyPage = () => (
     <p>
       PrepRoom — сервис без регистрации. Мы <strong>не храним</strong> персональные данные
       (имя, email, номер телефона). В <code>localStorage</code> твоего браузера
-      сохраняются исключительно служебные настройки: выбранная тема (светлая/тёмная),
-      факт показа приветственного попапа, таймстамп последнего визита
-      (чтобы не показывать экран загрузки чаще одного раза в 5 минут).
+      сохраняются исключительно служебные настройки: выбранная тема (светлая/тёмная), таймстамп последнего визита.
     </p>
 
     <H3>2. Куки и аналитика</H3>
@@ -114,10 +168,9 @@ export const PrivacyPage = () => (
 
     <H3>3. Обращения к внешним сервисам</H3>
     <p>
-      При нажатии «Уточнить у ИИ» твой вопрос передаётся провайдеру LLM
+      Обращения к AI передаётся провайдеру LLM
       (OpenRouter) без идентификаторов пользователя. Превью к записям
-      собеседований грузятся с серверов YouTube — это стандартное поведение
-      встраиваемого плеера.
+      собеседований грузятся с серверов YouTube.
     </p>
 
     <H3>4. Права пользователя</H3>
@@ -208,7 +261,7 @@ export const StatusPage = () => {
   const label = state === "ok" ? "OPERATIONAL" : state === "down" ? "DOWNTIME" : "CHECKING...";
 
   return (
-    <Page title="СТАТУС" kicker="›СТАТУС">
+    <Page title="СТАТУС" kicker="› СТАТУС">
       <Meta>Автообновление каждые 30 секунд</Meta>
 
       <div style={{
@@ -264,10 +317,8 @@ export const ContactPage = () => (
 
     <H3>О проекте</H3>
     <p>
-      PrepRoom — пет-проект, запущенный в 2026 году как часть
-      выпускной работы в СибГУТИ. Развивается в open-source парадигме:
-      база вопросов пополняется из публичных YouTube-интервью,
-      весь код доступен на GitHub.
+      PrepRoom — пет-проект, запущенный в 2026 году. Развивается в open-source парадигме.
+      Весь код доступен на GitHub.
     </p>
 
 

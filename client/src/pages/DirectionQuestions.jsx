@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import gsap from "gsap";
 import { api } from "../lib/api.js";
 import AiChat from "../components/AiChat.jsx";
@@ -59,14 +59,46 @@ export default function DirectionQuestions() {
   return (
     <div ref={root} style={{ position: "relative", zIndex: 2, paddingTop: 100 }}>
       <section style={{ padding: "60px 28px 40px", maxWidth: 1280, margin: "0 auto" }}>
-        <div className="mono" style={{
-          display: "inline-block", fontSize: 11, letterSpacing: "0.22em",
-          color: "var(--accent-ink)", border: "2px solid var(--accent-ink)",
-          padding: "6px 12px", marginBottom: 28
-        }}>DOMAIN / {slug?.toUpperCase()}</div>
+        <div
+          className="mono"
+          style={{
+            position: "relative", zIndex: 5, isolation: "isolate",
+            display: "inline-flex", alignItems: "center", gap: 6,
+            fontSize: 11, letterSpacing: "0.22em",
+            color: "var(--accent-ink)", border: "2px solid var(--accent-ink)",
+            padding: "6px 12px", marginBottom: 28,
+            background: "var(--bg, #0a0a0a)",
+          }}
+        >
+          <Link
+            to="/"
+            data-testid="crumb-home"
+            style={{ color: "var(--accent-ink)", textDecoration: "none" }}
+            onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
+            onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
+          >
+            DOMAIN
+          </Link>
+          <span style={{ opacity: 0.6 }}>/</span>
+          <Link
+            to="/directions"
+            data-testid="crumb-directions"
+            style={{ color: "var(--accent-ink)", textDecoration: "none" }}
+            onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
+            onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
+          >
+            {slug?.toUpperCase()}
+          </Link>
+        </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 40, alignItems: "end" }}>
-          <h1 className="display" style={{ fontSize: "clamp(80px, 14vw, 220px)", margin: 0, color: "var(--fg)" }}>
+           <h1
+            className="display"
+            style={{
+              fontSize: "clamp(80px, 14vw, 220px)", margin: 0, color: "var(--fg)",
+              pointerEvents: "none", // фикс: огромный заголовок не должен перехватывать клики
+            }}
+          >
             <span className="glitch" data-text={data?.direction?.name || slug?.toUpperCase()}>
               {data?.direction?.name || slug?.toUpperCase()}
             </span>

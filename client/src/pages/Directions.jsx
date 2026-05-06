@@ -69,8 +69,15 @@ export default function Directions() {
                   <DomainIcon slug={d.slug} hasContent={(d._count?.questions ?? 0) > 0} />
                 </div>
                 <div>
-                  <div className="display" style={{ fontSize: 48, lineHeight: 0.9 }}>{d.name}</div>
-                  {d.description && <p style={{ marginTop: 14, fontSize: 12.5, lineHeight: 1.55, opacity: 0.85, maxWidth: "75%" }}>{d.description}</p>}
+                  {/* фикс: дорожка под заголовок всегда одинаковой высоты (≈ 2 строки),
+                      сам текст прижат к низу — поэтому baseline у всех карточек совпадает */}
+                  <div style={{ minHeight: 96, display: "flex", alignItems: "flex-end" }}>
+                    <div className="display" style={{ fontSize: 48, lineHeight: 0.9, margin: 0 }}>{d.name}</div>
+                  </div>
+                  <p style={{
+                    marginTop: 14, fontSize: 12.5, lineHeight: 1.55,
+                    opacity: 0.85, maxWidth: "75%", minHeight: 40, marginBottom: 0,
+                  }}>{d.description || ""}</p>
                 </div>
               </Link>
             );

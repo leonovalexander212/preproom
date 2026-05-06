@@ -38,20 +38,66 @@ export default function Landing() {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
+      // HERO — одношотовое появление
       gsap.from(".hero-line", { yPercent: 110, duration: 0.9, ease: "expo.out", stagger: 0.08, delay: 0.1 });
       gsap.from(".hero-meta", { opacity: 0, y: 20, duration: 0.8, delay: 0.6, stagger: 0.08 });
-      gsap.from(".domain-card", {
-        scrollTrigger: { trigger: ".domain-grid", start: "top 80%" },
-        opacity: 0, y: 60, duration: 0.7, ease: "power3.out", stagger: 0.07,
-      });
+
+      // Внутренние тексты — одношотово, БЕЗ scrub. За исчезновение всей секции
+      // отвечает один общий триггер на родителе .fade-section / .fade-section-long.
       gsap.utils.toArray(".reveal-title").forEach((el) => {
         gsap.from(el, {
-          scrollTrigger: { trigger: el, start: "top 85%" },
-          opacity: 0, y: 40, duration: 0.8, ease: "power3.out",
+          scrollTrigger: { trigger: el, start: "top 88%", toggleActions: "play none none reverse" },
+          opacity: 0, y: 30, duration: 0.7, ease: "power3.out",
         });
       });
+
+      // Карточки направлений — тоже одношотово, по триггеру родителя-грида.
+      gsap.from(".domain-card", {
+        scrollTrigger: { trigger: ".domain-grid", start: "top 85%", toggleActions: "play none none reverse" },
+        opacity: 0, y: 50, duration: 0.7, ease: "power3.out", stagger: 0.06,
+      });
+
+ gsap.utils.toArray(".fade-section").forEach((sec) => {
+        gsap.fromTo(
+          sec,
+          { opacity: 0 },
+          {
+            opacity: 1, ease: "none",
+            scrollTrigger: { trigger: sec, start: "top 90%", end: "top 55%", scrub: true },
+          }
+        );
+      });
+
+      // Шапка "НАПРАВЛЕНИЯ" — появляется раньше остальных секций.
+      gsap.utils.toArray(".fade-section-long").forEach((sec) => {
+        gsap.fromTo(
+          sec,
+          { opacity: 0 },
+          {
+            opacity: 1, ease: "none",
+            scrollTrigger: { trigger: sec, start: "top 95%", end: "top 65%", scrub: true },
+          }
+        );
+      });
+      gsap.utils.toArray(".fade-section-long").forEach((sec) => {
+        gsap.fromTo(
+          sec,
+          { opacity: 0 },
+          {
+            opacity: 1, ease: "none",
+            scrollTrigger: { trigger: sec, start: "top 95%", end: "top 65%", scrub: true },
+          }
+        );
+        gsap.to(sec, {
+          opacity: 0, ease: "none",
+          // bottom -80% = секция ещё долго видна после того, как её низ ушёл за верх
+          scrollTrigger: { trigger: sec, start: "bottom -20%", end: "bottom -80%", scrub: true },
+        });
+      });
+
+      // code-block — оставляем одношотово, он один и не конфликтует
       gsap.from(".code-block", {
-        scrollTrigger: { trigger: ".code-block", start: "top 80%" },
+        scrollTrigger: { trigger: ".code-block", start: "top 80%", toggleActions: "play none none reverse" },
         opacity: 0, scale: 0.96, rotateX: 10, duration: 0.9, ease: "power3.out",
       });
     }, heroRef);
@@ -86,6 +132,7 @@ export default function Landing() {
 
   return (
     <div ref={heroRef} style={{ position: "relative", zIndex: 2 }}>
+      {/* ---------------- HERO ---------------- */}
       <section style={{ padding: "180px 28px 60px", maxWidth: 1280, margin: "0 auto", position: "relative" }}>
         <div className="hero-meta mono" style={{
           fontSize: 11, color: "var(--accent)", letterSpacing: "0.24em",
@@ -137,7 +184,12 @@ export default function Landing() {
         </div>
       </section>
 
-      <section id="domains" style={{ padding: "120px 28px 0", maxWidth: 1280, margin: "0 auto" }}>
+      {/* ---------------- DOMAINS / HEADLINE (живёт дольше) ---------------- */}
+      <section
+        id="domains-headline"
+        className="fade-section-long"
+        style={{ padding: "120px 28px 0", maxWidth: 1280, margin: "0 auto" }}
+      >
         <div style={{ display: "flex", alignItems: "end", justifyContent: "space-between", marginBottom: 50, gap: 24 }}>
           <div>
             <div className="mono reveal-title" style={{ fontSize: 11, color: "var(--accent)", letterSpacing: "0.24em", marginBottom: 18 }}>
@@ -152,7 +204,14 @@ export default function Landing() {
             БЕЗ РЕКЛАМЫ. БЕЗ ПОДПИСОК. ТОЛЬКО ПОДГОТОВКА.
           </p>
         </div>
+      </section>
 
+      {/* ---------------- DOMAINS / GRID (отдельная fade-секция) ---------------- */}
+      <section
+        id="domains"
+        className="fade-section"
+        style={{ padding: "0 28px 0", maxWidth: 1280, margin: "0 auto" }}
+      >
         <div className="domain-grid" style={{
           display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0, border: "2px solid var(--fg)",
         }}>
@@ -189,9 +248,15 @@ export default function Landing() {
               </div>
 
               <div>
-                <div className="display" style={{ fontSize: 56, lineHeight: 0.9 }}>{d.name}</div>
-                <p style={{ marginTop: 16, fontSize: 12.5, lineHeight: 1.55, opacity: 0.85, maxWidth: "75%" }}>
-                  {d.desc}
+                {/* фиксированная "дорожка" под заголовок: ~2 строки при fontSize:56/lineHeight:0.9 */}
+                <div style={{ minHeight: 110, display: "flex", alignItems: "flex-end" }}>
+                  <div className="display" style={{ fontSize: 56, lineHeight: 0.9, margin: 0 }}>{d.name}</div>
+                </div>
+                <p style={{
+                  marginTop: 16, fontSize: 12.5, lineHeight: 1.55,
+                  opacity: 0.85, maxWidth: "75%", minHeight: 40, marginBottom: 0,
+                }}>
+                  {d.desc || ""}
                 </p>
               </div>
             </Link>
@@ -199,7 +264,12 @@ export default function Landing() {
         </div>
       </section>
 
-      <section id="simulator" style={{ padding: "160px 28px 0", maxWidth: 1280, margin: "0 auto" }}>
+      {/* ---------------- MOCK INTERVIEW ---------------- */}
+      <section
+        id="simulator"
+        className="fade-section"
+        style={{ padding: "160px 28px 0", maxWidth: 1280, margin: "0 auto" }}
+      >
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: 80, alignItems: "start" }}>
           <div>
             <div className="mono reveal-title" style={{ fontSize: 11, color: "var(--accent)", letterSpacing: "0.24em", marginBottom: 18 }}>
@@ -232,6 +302,7 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ---------------- MARQUEE ---------------- */}
       <section style={{ marginTop: 140, padding: "20px 0", borderTop: "2px solid var(--fg)", borderBottom: "2px solid var(--fg)", background: "var(--accent)" }}>
         <div className="marquee">
           <div className="marquee-track" style={{ fontFamily: "'Archivo Black'", fontSize: 56, color: "#000", letterSpacing: "-0.03em" }}>
