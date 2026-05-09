@@ -42,8 +42,7 @@ export default function Landing() {
       gsap.from(".hero-line", { yPercent: 110, duration: 0.9, ease: "expo.out", stagger: 0.08, delay: 0.1 });
       gsap.from(".hero-meta", { opacity: 0, y: 20, duration: 0.8, delay: 0.6, stagger: 0.08 });
 
-      // Внутренние тексты — одношотово, БЕЗ scrub. За исчезновение всей секции
-      // отвечает один общий триггер на родителе .fade-section / .fade-section-long.
+      // Внутренние тексты — появляются/исчезают при входе/выходе из вьюпорта.
       gsap.utils.toArray(".reveal-title").forEach((el) => {
         gsap.from(el, {
           scrollTrigger: { trigger: el, start: "top 88%", toggleActions: "play none none reverse" },
@@ -51,7 +50,7 @@ export default function Landing() {
         });
       });
 
-      // Карточки направлений — тоже одношотово, по триггеру родителя-грида.
+      // Карточки направлений — появляются/исчезают при входе/выходе из вьюпорта.
       gsap.from(".domain-card", {
         scrollTrigger: { trigger: ".domain-grid", start: "top 85%", toggleActions: "play none none reverse" },
         opacity: 0, y: 50, duration: 0.7, ease: "power3.out", stagger: 0.06,
@@ -68,31 +67,16 @@ export default function Landing() {
         );
       });
 
-      // Шапка "НАПРАВЛЕНИЯ" — появляется раньше остальных секций.
+      // Шапка "НАПРАВЛЕНИЯ" — такие же эффекты как у domain cards (fade-section).
       gsap.utils.toArray(".fade-section-long").forEach((sec) => {
         gsap.fromTo(
           sec,
           { opacity: 0 },
           {
             opacity: 1, ease: "none",
-            scrollTrigger: { trigger: sec, start: "top 95%", end: "top 65%", scrub: true },
+            scrollTrigger: { trigger: sec, start: "top 90%", end: "top 55%", scrub: true },
           }
         );
-      });
-      gsap.utils.toArray(".fade-section-long").forEach((sec) => {
-        gsap.fromTo(
-          sec,
-          { opacity: 0 },
-          {
-            opacity: 1, ease: "none",
-            scrollTrigger: { trigger: sec, start: "top 95%", end: "top 65%", scrub: true },
-          }
-        );
-        gsap.to(sec, {
-          opacity: 0, ease: "none",
-          // bottom -80% = секция ещё долго видна после того, как её низ ушёл за верх
-          scrollTrigger: { trigger: sec, start: "bottom -20%", end: "bottom -80%", scrub: true },
-        });
       });
 
       // code-block — оставляем одношотово, он один и не конфликтует
@@ -133,14 +117,13 @@ export default function Landing() {
   return (
     <div ref={heroRef} style={{ position: "relative", zIndex: 2 }}>
       {/* ---------------- HERO ---------------- */}
-      <section style={{ padding: "180px 28px 60px", maxWidth: 1280, margin: "0 auto", position: "relative" }}>
-        <div className="hero-meta mono" style={{
-          fontSize: 11, color: "var(--accent)", letterSpacing: "0.24em",
+      <section className="landing-hero-section" style={{ padding: "180px 28px 60px", maxWidth: 1280, margin: "0 auto", position: "relative" }}>
+        <div className="hero-meta crumb-tag" style={{
           marginBottom: 24, display: "inline-flex", alignItems: "center", gap: 12,
           border: "1px solid var(--line)", padding: "6px 12px",
         }}>
           <span style={{ width: 8, height: 8, background: "var(--accent)", display: "inline-block" }} />
-          NEW · 2026 · BUILD #0015
+          АПРЕЛЬ 2026 BETA
         </div>
 
         <h1 className="display" style={{ fontSize: "clamp(56px, 11vw, 168px)", color: "var(--fg)", margin: 0 }}>
@@ -163,18 +146,17 @@ export default function Landing() {
             Платформа для подготовки к самым требовательным инженерным собеседованиям.
           </p>
           <div className="hero-meta" style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-            <Link to="/directions" ref={ctaRef} className="btn-brutal" data-testid="hero-cta-start">
-              НАЧАТЬ ПОДГОТОВКУ ↗
+            <Link to="/directions" ref={ctaRef} className="btn-accent" data-testid="hero-cta-start">
+              НАЧАТЬ ПОДГОТОВКУ
             </Link>
           </div>
         </div>
 
-        <div className="hero-meta" style={{
-          marginTop: 80, border: "2px solid var(--fg)",
-          display: "grid", gridTemplateColumns: "repeat(3, 1fr)", background: "var(--card)",
+        <div className="hero-meta stats-grid" style={{
+          marginTop: 95, border: "2px solid var(--fg)", background: "var(--card)",
         }}>
           {statItems.map((s, i, arr) => (
-            <div key={s.l} style={{ padding: "26px 22px", borderRight: i < arr.length - 1 ? "2px solid var(--fg)" : "none" }}>
+            <div key={s.l} className="stat-cell" style={{ padding: "26px 22px", borderRight: i < arr.length - 1 ? "2px solid var(--fg)" : "none" }}>
               <div className="display" style={{ fontSize: 38, color: "var(--fg)" }} data-testid={`stat-${s.l}`}>{s.v}</div>
               <div className="mono" style={{ fontSize: 10, color: "var(--muted)", letterSpacing: "0.2em", marginTop: 6 }}>
                 {s.l}
@@ -184,16 +166,16 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ---------------- DOMAINS / HEADLINE (живёт дольше) ---------------- */}
+      {/* Domains headline section */}
       <section
         id="domains-headline"
-        className="fade-section-long"
+        className="fade-section-long landing-section"
         style={{ padding: "120px 28px 0", maxWidth: 1280, margin: "0 auto" }}
       >
-        <div style={{ display: "flex", alignItems: "end", justifyContent: "space-between", marginBottom: 50, gap: 24 }}>
+        <div className="domains-headline-flex" style={{ marginBottom: 50 }}>
           <div>
-            <div className="mono reveal-title" style={{ fontSize: 11, color: "var(--accent)", letterSpacing: "0.24em", marginBottom: 18 }}>
-              › ВЫБЕРИ СТЕК
+            <div className="crumb-tag reveal-title" style={{ marginBottom: 18 }}>
+              ВЫБИРАЙ
             </div>
             <h2 className="display reveal-title" style={{ fontSize: "clamp(48px, 7vw, 120px)", margin: 0, color: "var(--fg)" }}>
               НАПРАВЛЕНИЯ
@@ -206,15 +188,13 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ---------------- DOMAINS / GRID (отдельная fade-секция) ---------------- */}
+      {/* Domains grid section */}
       <section
         id="domains"
-        className="fade-section"
+        className="fade-section landing-section"
         style={{ padding: "0 28px 0", maxWidth: 1280, margin: "0 auto" }}
       >
-        <div className="domain-grid" style={{
-          display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0, border: "2px solid var(--fg)",
-        }}>
+        <div className="domain-grid">
           {DOMAINS.map((d, idx) => (
             <Link
               key={d.id}
@@ -239,20 +219,19 @@ export default function Landing() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
                 <div className="mono" style={{ fontSize: 11, letterSpacing: "0.2em", opacity: 0.7 }}>N°{d.no}</div>
                 <div className="mono" style={{ fontSize: 10, letterSpacing: "0.2em", opacity: 0.55 }}>
-                  {d.muted ? "ALL ↗" : "OPEN ↗"}
+                  {d.muted ? "ALL" : ""}
                 </div>
               </div>
 
-              <div style={{ position: "absolute", bottom: 18, right: 18, opacity: 0.85, pointerEvents: "none" }}>
+              <div className="domain-card-icon" style={{ position: "absolute", bottom: 18, right: 18, opacity: 0.85, pointerEvents: "none" }}>
                 <DomainIcon slug={d.id} />
               </div>
 
               <div>
-                {/* фиксированная "дорожка" под заголовок: ~2 строки при fontSize:56/lineHeight:0.9 */}
-                <div style={{ minHeight: 110, display: "flex", alignItems: "flex-end" }}>
+                <div className="domain-card-title" style={{ minHeight: 110, display: "flex", alignItems: "flex-end" }}>
                   <div className="display" style={{ fontSize: 56, lineHeight: 0.9, margin: 0 }}>{d.name}</div>
                 </div>
-                <p style={{
+                <p className="domain-card-desc" style={{
                   marginTop: 16, fontSize: 12.5, lineHeight: 1.55,
                   opacity: 0.85, maxWidth: "75%", minHeight: 40, marginBottom: 0,
                 }}>
@@ -267,13 +246,13 @@ export default function Landing() {
       {/* ---------------- MOCK INTERVIEW ---------------- */}
       <section
         id="simulator"
-        className="fade-section"
+        className="fade-section landing-section mock-section-top"
         style={{ padding: "160px 28px 0", maxWidth: 1280, margin: "0 auto" }}
       >
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: 80, alignItems: "start" }}>
+        <div className="mock-grid">
           <div>
-            <div className="mono reveal-title" style={{ fontSize: 11, color: "var(--accent)", letterSpacing: "0.24em", marginBottom: 18 }}>
-              › СИМУЛЯТОР
+            <div className="crumb-tag reveal-title" style={{ marginBottom: 18 }}>
+              СИМУЛЯТОР
             </div>
             <h2 className="display reveal-title" style={{ fontSize: "clamp(44px, 6.4vw, 104px)", margin: 0, color: "var(--fg)" }}>
               MOCK<br/>
@@ -283,9 +262,9 @@ export default function Landing() {
               Наш симулятор позволяет получить опыт прохождения
               мок-собеседования абсолютно бесплатно.
             </p>
-            <ul style={{ listStyle: "none", padding: 0, margin: "32px 0 0", display: "grid", gap: 14 }}>
+            <ul className="features-list" style={{ listStyle: "none", padding: 0, margin: "32px 0 0", display: "grid", gap: 14 }}>
               {FEATURES.map((f, i) => (
-                <li key={f} className="reveal-title" style={{
+                <li key={f} className="reveal-title features-list-item" style={{
                   display: "flex", alignItems: "center", gap: 16,
                   borderBottom: "1px solid var(--line)", paddingBottom: 14,
                 }}>
@@ -303,9 +282,9 @@ export default function Landing() {
       </section>
 
       {/* ---------------- MARQUEE ---------------- */}
-      <section style={{ marginTop: 140, padding: "20px 0", borderTop: "2px solid var(--fg)", borderBottom: "2px solid var(--fg)", background: "var(--accent)" }}>
+      <section className="landing-work-marquee" style={{ marginTop: 140, padding: "20px 0", borderTop: "2px solid var(--fg)", borderBottom: "2px solid var(--fg)", background: "var(--accent)" }}>
         <div className="marquee">
-          <div className="marquee-track" style={{ fontFamily: "'Archivo Black'", fontSize: 56, color: "#000", letterSpacing: "-0.03em" }}>
+          <div className="marquee-track landing-marquee-text" style={{ fontFamily: "'Archivo Black'", fontSize: 56, color: "#000", letterSpacing: "-0.03em" }}>
             {Array.from({ length: 12 }).map((_, i) => (
               <span key={i} className="marquee-seg" style={{ display: "inline-block" }}>
                 WORK&nbsp;<span style={{ color: "#000000", margin: "0 28px" }}>✦</span>&nbsp;
@@ -425,7 +404,7 @@ function CodeBlock() {
           {typed >= fullSrc.length ? "● READY" : "● TYPING"}
         </span>
       </div>
-      <div style={{ padding: "20px 18px", color: "#cfcfcf", lineHeight: 1.7, height: 320, overflow: "hidden" }}>
+      <div className="code-block-source" style={{ padding: "20px 18px", color: "#cfcfcf", lineHeight: 1.7, height: 320, overflow: "hidden" }}>
         {scenario.src.map((_, i) => (
           <div key={i} style={{ display: "flex", gap: 14 }}>
             <span style={{ color: "#3a3a3a", width: 24, textAlign: "right", flexShrink: 0 }}>{i+1}</span>
@@ -433,7 +412,7 @@ function CodeBlock() {
           </div>
         ))}
       </div>
-      <div style={{ borderTop: "2px solid #1f1f1f", padding: "14px 18px", background: "#0a0a0a", color: "#888", height: 130, overflow: "hidden" }}>
+      <div className="code-block-terminal" style={{ borderTop: "2px solid #1f1f1f", padding: "14px 18px", background: "#0a0a0a", color: "#888", height: 130, overflow: "hidden" }}>
         <div style={{ color: "#e5ff00", fontSize: 10, letterSpacing: "0.2em", marginBottom: 6 }}>// TERMINAL</div>
         {fullTerm.slice(0, termTyped).split("\n").map((line, i) => (
           <div key={i} style={{ whiteSpace: "pre" }}>

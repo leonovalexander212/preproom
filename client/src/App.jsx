@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import Lenis from "lenis";
 import "./App.css";
-import BrutalScene from "./components/BrutalScene.jsx";
+import BackgroundScene from "./components/BackgroundScene.jsx";
 import NavBar from "./components/NavBar.jsx";
 import Footer from "./components/Footer.jsx";
 import Landing from "./pages/Landing.jsx";
@@ -10,10 +10,10 @@ import Directions from "./pages/Directions.jsx";
 import DirectionQuestions from "./pages/DirectionQuestions.jsx";
 import Recordings from "./pages/Recordings.jsx";
 import Tests from "./pages/Tests.jsx";
-import Quiz from "./pages/Quiz.jsx";
 import QuizDirection from "./pages/QuizDirection.jsx";
 import { DocsPage, PrivacyPage, TermsPage, StatusPage, ContactPage } from "./pages/Legal.jsx";
 import MockInterview from "./pages/MockInterview.jsx";
+import NotFound from "./pages/NotFound.jsx";
 
 /* ===== ПЕРЕХОДЫ МЕЖДУ СТРАНИЦАМИ (мягкий fade) ===== */
 const PAGE_TRANSITION_CSS = `
@@ -43,7 +43,6 @@ function AnimatedRoutes() {
         <Route path="/d/:slug" element={<DirectionQuestions />} />
         <Route path="/recordings" element={<Recordings />} />
         <Route path="/tests" element={<Tests />} />
-        <Route path="/tests/quiz" element={<Quiz />} />
         <Route path="/quiz-direction" element={<QuizDirection />} />
         <Route path="/mock" element={<MockInterview />} />
         <Route path="/docs" element={<DocsPage />} />
@@ -51,7 +50,7 @@ function AnimatedRoutes() {
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/status" element={<StatusPage />} />
         <Route path="/contact" element={<ContactPage />} />
-        <Route path="*" element={<Landing />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </div>
   );
@@ -99,20 +98,20 @@ function DirectionTestPopup({ onClose }) {
           border: "2px solid var(--fg)", boxShadow: "10px 10px 0 var(--accent)",
           padding: 36,
         }}>
-        <div className="mono" style={{ fontSize: 11, letterSpacing: "0.22em", color: "var(--accent-ink)" }}>
-          // ТЕСТ НА НАПРАВЛЕНИЕ
-        </div>
+
         <div className="display" style={{ fontSize: 48, marginTop: 14, lineHeight: 0.95 }}>
           НЕ ЗНАЕШЬ,<br />
           <span style={{ color: "var(--accent-ink)" }}>С ЧЕГО НАЧАТЬ?</span>
         </div>
         <p style={{ marginTop: 18, color: "var(--fg-dim)", fontSize: 14, lineHeight: 1.6 }}>
-          Ответь на 8 простых вопросов — подберём IT-направление под твой склад ума.
-          Никаких тяжёлых терминов, честно. 2 минуты.
+          Ответь на 8 вопросов и мы подберём IT-направление для тебя.
+          Никаких тяжёлых терминов. Честно. Всего 2 минуты.
         </p>
         <div style={{ display: "flex", gap: 10, marginTop: 24, flexWrap: "wrap" }}>
-          <button onClick={accept} className="btn-brutal">ПРОЙТИ ТЕСТ ↗</button>
-          <button onClick={decline} className="btn-ghost">ПОЗЖЕ</button>
+          <button onClick={accept} className="btn-accent">ПРОЙТИ ТЕСТ ↗</button>
+          <button onClick={decline} className="btn-ghost" style={{ marginLeft: "auto" }}>ПОЗЖЕ</button>
+
+          
         </div>
       </div>
     </div>
@@ -122,6 +121,13 @@ function DirectionTestPopup({ onClose }) {
 function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem("pp-theme") || "dark");
   const [showDirPopup, setShowDirPopup] = useState(false);
+
+  useEffect(() => {
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+    window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -142,6 +148,10 @@ function App() {
   }, []);
 
   useEffect(() => {
+    // Disable Lenis on touch/mobile devices — use native scroll instead
+    const isMobile = window.matchMedia("(max-width: 831px)").matches || "ontouchstart" in window;
+    if (isMobile) return;
+
     const lenis = new Lenis({
       duration: 1.15,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -163,7 +173,7 @@ function App() {
   return (
     <div className="App noise">
       <style>{PAGE_TRANSITION_CSS}</style>
-      <BrutalScene theme={theme} />
+      <BackgroundScene theme={theme} />
       <BrowserRouter>
         <ScrollToTop />
         <NavBar theme={theme} onToggleTheme={toggleTheme} />

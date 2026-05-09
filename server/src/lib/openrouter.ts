@@ -7,9 +7,9 @@ if (!process.env.OPENROUTER_API_KEY) {
 
 export const openrouter = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY,
-  baseURL: 'https://openrouter.ai/api/v1',
+  baseURL: process.env.OPENROUTER_BASE_URL ?? 'https://openrouter.ai/api/v1',
   defaultHeaders: {
-    'HTTP-Referer': 'http://localhost:4000',
-    'X-Title': 'Interview Platform',
+    'HTTP-Referer': process.env.OPENROUTER_REFERER ?? 'http://localhost:4000',
+    'X-Title': process.env.OPENROUTER_TITLE ?? 'Interview Platform',
   },
 });

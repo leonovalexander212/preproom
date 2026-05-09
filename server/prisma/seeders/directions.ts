@@ -12,7 +12,7 @@ const DIRECTIONS = [
   { slug: 'php',      name: 'PHP',              category: 'Программирование', description: 'Веб-разработка, CMS, бэкенд сайтов',      order: 8,  hasDifficultyLevels: true },
   { slug: 'android',  name: 'Android',          category: 'Программирование', description: 'Kotlin, Java, мобильная разработка',      order: 9,  hasDifficultyLevels: true },
   { slug: 'unity',    name: 'Unity / Game Dev', category: 'Программирование', description: 'Разработка игр на Unity Engine',          order: 10, hasDifficultyLevels: true },
-  { slug: '1c',       name: '1С',               category: 'Программирование', description: 'Разработка в платформе 1С',               order: 11, hasDifficultyLevels: true },
+  { slug: '1c',       name: '1C',               category: 'Программирование', description: 'Разработка в платформе 1C',               order: 11, hasDifficultyLevels: true },
 
   // Инфраструктура
   { slug: 'devops',        name: 'DevOps',        category: 'Инфраструктура', description: 'CI/CD, Docker, Kubernetes, облака',     order: 20, hasDifficultyLevels: true },
@@ -24,12 +24,12 @@ const DIRECTIONS = [
 
   // Аналитика и менеджмент
   { slug: 'data-science',    name: 'Data Science',        category: 'Аналитика', description: 'ML, статистика, исследование данных',       order: 40, hasDifficultyLevels: false },
-  { slug: 'data-analyst',    name: 'Дата-аналитик',       category: 'Аналитика', description: 'SQL, дашборды, метрики продукта',            order: 41, hasDifficultyLevels: false },
-  { slug: 'business-analyst', name: 'Бизнес-аналитик',    category: 'Аналитика', description: 'Требования, процессы, постановка задач',    order: 42, hasDifficultyLevels: false },
-  { slug: 'product-manager', name: 'Продукт-менеджер',    category: 'Аналитика', description: 'Продуктовая стратегия, roadmap, метрики',   order: 43, hasDifficultyLevels: false },
+  { slug: 'data-analyst',    name: 'Data Analyst',        category: 'Аналитика', description: 'SQL, дашборды, метрики продукта',            order: 41, hasDifficultyLevels: false },
+  { slug: 'business-analyst', name: 'Business Analyst',    category: 'Аналитика', description: 'Требования, процессы, постановка задач',    order: 42, hasDifficultyLevels: false },
+  { slug: 'product-manager', name: 'Product Manager',     category: 'Аналитика', description: 'Продуктовая стратегия, roadmap, метрики',   order: 43, hasDifficultyLevels: false },
 
   // Креатив
-  { slug: 'seo',       name: 'SEO-специалист', category: 'Креатив', description: 'Поисковая оптимизация, контент, ссылки',    order: 50, hasDifficultyLevels: false },
+  { slug: 'seo',       name: 'SEO Specialist', category: 'Креатив', description: 'Поисковая оптимизация, контент, ссылки',    order: 50, hasDifficultyLevels: false },
   { slug: '3d-artist', name: '3D Artist',       category: 'Креатив', description: 'Моделирование, текстурирование, рендер',   order: 51, hasDifficultyLevels: false },
 
   // Новое и интересное — с огоньком

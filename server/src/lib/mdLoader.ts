@@ -6,7 +6,7 @@ export interface MdTask {
   id: string;
   title: string;
   difficulty: 'easy' | 'medium' | 'hard';
-  language: 'python' | 'java' | 'javascript' | 'php';
+  language: 'python' | 'java' | 'javascript' | 'php' | 'csharp';
   description: string;
   starterCode: string;
   tests: TestCase[];

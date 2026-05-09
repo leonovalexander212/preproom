@@ -6,7 +6,7 @@ const TESTS = [
     id: "mock",
     title: "AI MOCK INTERVIEW",
     tag: "~30 МИН · 15 ВОПРОСОВ",
-    desc: "Реальное собеседование с ИИ-интервьюером. Он ревьюит строго, как техлид.",
+    desc: "Собеседование с ИИ-интервьюером.",
     to: "/mock",
     cta: "НАЧАТЬ СОБЕС ↗",
     accent: "#a78bfa",
@@ -27,8 +27,8 @@ const TESTS = [
 export default function Tests() {
   return (
     <div style={{ paddingTop: 120, maxWidth: 1180, margin: "0 auto", padding: "120px 28px 60px" }}>
-      <div className="mono" style={{ fontSize: 11, color: "var(--accent-ink)", letterSpacing: "0.24em", marginBottom: 18 }}>
-        › ХАБ ТЕСТОВ
+      <div className="crumb-tag" style={{ marginBottom: 18 }}>
+        ХАБ ТЕСТОВ
       </div>
       <h1 className="display" style={{ fontSize: "clamp(56px, 9vw, 140px)", margin: 0, color: "var(--fg)" }}>
         <span className="glitch" data-text="ТЕСТЫ">ТЕСТЫ</span>

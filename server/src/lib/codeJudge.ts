@@ -5,7 +5,7 @@
 
 import { llm } from './llm';
 
-export type JudgeLanguage = 'python' | 'java' | 'javascript' | 'php';
+export type JudgeLanguage = 'python' | 'java' | 'javascript' | 'php' | 'csharp';
 
 export interface TestCase {
   stdin: string;

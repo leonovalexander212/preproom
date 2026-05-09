@@ -1,4 +1,7 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+if (!import.meta.env.VITE_API_URL) {
+  throw new Error("VITE_API_URL is required");
+}
+const API_URL = import.meta.env.VITE_API_URL;
 
 async function get(path, params) {
   const url = new URL(API_URL + path);

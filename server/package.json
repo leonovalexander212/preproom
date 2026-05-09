@@ -12,6 +12,8 @@
     "prisma:generate": "prisma generate",
     "db:seed": "prisma db seed",
     "db:reset": "prisma migrate reset",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "dedupe:analyze": "tsx scripts/dedupe-analyze.ts",
     "dedupe:apply": "tsx scripts/dedupe-apply.ts",
     "classify": "tsx scripts/classify-questions.ts"
@@ -36,8 +38,12 @@
     "@types/express": "^5.0.6",
     "@types/node": "^25.6.0",
     "@types/pg": "^8.20.0",
+    "@types/supertest": "^7.2.0",
+    "@vitest/coverage-v8": "^4.1.5",
     "prisma": "^7.7.0",
+    "supertest": "^7.2.2",
     "tsx": "^4.21.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5"
   }
 }

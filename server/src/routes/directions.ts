@@ -47,12 +47,12 @@ router.get('/:slug/questions', async (req, res) => {
     const { slug } = req.params;
     const { difficulty, topic, type } = req.query;
 
-    // 1. Находим направление
     const direction = await prisma.direction.findUnique({
       where: { slug },
       select: {
         id: true,
         name: true,
+        hasDifficultyLevels: true,
         _count: { select: { interviews: true } },
       },
     });
@@ -61,9 +61,6 @@ router.get('/:slug/questions', async (req, res) => {
       return res.status(404).json({ error: 'Direction not found' });
     }
 
-    // 2. Если пришли с фильтром по грейду и/или типу — считаем базу процентов
-    //    не от всех интервью, а только от тех, где есть вопросы подходящего грейда/типа.
-    //    Это делает процент осмысленным.
     let totalInterviews = direction._count.interviews;
     if (difficulty || type) {
       totalInterviews = await prisma.interview.count({
@@ -81,7 +78,6 @@ router.get('/:slug/questions', async (req, res) => {
       });
     }
 
-    // 3. Загружаем вопросы с подсчётом количества интервью, в которых они были
     const questions = await prisma.question.findMany({
       where: {
         directionId: direction.id,
@@ -100,7 +96,6 @@ router.get('/:slug/questions', async (req, res) => {
       },
     });
 
-    // 4. Рассчитываем вероятность и сортируем по ней
     const enriched = questions
       .map((q) => ({
         id: q.id,
@@ -119,7 +114,7 @@ router.get('/:slug/questions', async (req, res) => {
       .sort((a, b) => b.probability - a.probability);
 
     res.json({
-      direction: { name: direction.name, slug, totalInterviews },
+      direction: { name: direction.name, slug, totalInterviews, hasDifficultyLevels: direction.hasDifficultyLevels },
       questions: enriched,
     });
   } catch (error) {

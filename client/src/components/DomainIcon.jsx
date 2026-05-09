@@ -87,11 +87,11 @@ function PhpIcon() {
     <svg {...SVG_BASE} className="domain-icon domain-icon--php">
       <ellipse cx="32" cy="32" rx="26" ry="14" transform="rotate(-8 32 32)" />
       {/* P */}
-      <path d="M14 28 v10 M14 28 h5 a3 3 0 0 1 0 6 h-5" />
+      <path d="M16 28 v10 M16 28 h5 a3 3 0 0 1 0 6 h-5" />
       {/* H */}
-      <path d="M26 28 v10 M34 28 v10 M26 33 h8" />
+      <path d="M28 28 v10 M36 28 v10 M28 33 h8" />
       {/* P */}
-      <path d="M42 28 v10 M42 28 h5 a3 3 0 0 1 0 6 h-5" />
+      <path d="M40 28 v10 M40 28 h5 a3 3 0 0 1 0 6 h-5" />
     </svg>
   );
 }

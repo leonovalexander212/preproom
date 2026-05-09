@@ -22,8 +22,8 @@ export const DIRECTIONS: DirectionMeta[] = [
 
 export const GRADES: { slug: Grade; label: string; hint: string; available: boolean; disabledReason?: string }[] = [
   { slug: 'JUNIOR', label: 'JUNIOR', hint: '1-2 года', available: true },
-  { slug: 'MIDDLE', label: 'MIDDLE', hint: '2-4 года', available: false, disabledReason: 'В БД пока только Junior-вопросы' },
-  { slug: 'SENIOR', label: 'SENIOR', hint: '4+ лет',  available: false, disabledReason: 'В БД пока только Junior-вопросы' },
+  { slug: 'MIDDLE', label: 'MIDDLE', hint: '2-4 года', available: true },
+  { slug: 'SENIOR', label: 'SENIOR', hint: '4+ лет',  available: true },
 ];
 
 export function getDirectionMeta(slug: Direction): DirectionMeta {

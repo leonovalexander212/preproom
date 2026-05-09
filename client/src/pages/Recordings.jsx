@@ -3,6 +3,11 @@ import { api } from "../lib/api.js";
 
 const PAGE_REC = 9;
 
+const NO_GRADE_DIRS = [
+  "3d-artist", "1c", "data-engineer", "data-science", "ai-engineer",
+  "reverse-engineer", "rust", "seo", "business-analyst", "data-analyst", "product-manager",
+];
+
 export default function Recordings() {
   const [items, setItems] = useState([]);
   const [error, setError] = useState(null);
@@ -11,6 +16,8 @@ export default function Recordings() {
   const [diff, setDiff] = useState("");
   const [dirs, setDirs] = useState([]);
   const [page, setPage] = useState(1);
+
+  const showGrades = !dir || !NO_GRADE_DIRS.includes(dir);
 
   useEffect(() => {
     api.getDirections().then(setDirs).catch(() => {});
@@ -35,15 +42,12 @@ export default function Recordings() {
     <div style={{ position: "relative", zIndex: 2, paddingTop: 120 }}>
       <section style={{ padding: "60px 28px 40px", maxWidth: 1280, margin: "0 auto" }}>
         <div
-          className="mono"
+          className="crumb-tag"
           style={{
-            fontSize: 11,
-            color: "var(--accent-ink)",
-            letterSpacing: "0.24em",
             marginBottom: 18,
           }}
         >
-          › ИСТОЧНИКИ
+          ИСТОЧНИКИ
         </div>
 
         <h1
@@ -89,7 +93,7 @@ export default function Recordings() {
       >
         <Dropdown
           value={dir}
-          onChange={setDir}
+          onChange={(val) => { setDir(val); setDiff(""); }}
           placeholder="ВСЕ НАПРАВЛЕНИЯ"
           options={[
             { value: "", label: "ВСЕ НАПРАВЛЕНИЯ" },
@@ -100,30 +104,32 @@ export default function Recordings() {
           ]}
         />
 
-        <div style={{ display: "flex", border: "2px solid var(--fg)" }}>
-          {[
-            ["", "ВСЕ"],
-            ["JUNIOR", "JR"],
-            ["MIDDLE", "MD"],
-            ["SENIOR", "SR"],
-          ].map(([k, l], i, a) => (
-            <button
-              key={k || "all"}
-              onClick={() => setDiff(k)}
-              className="mono"
-              style={{
-                padding: "10px 16px",
-                border: "none",
-                cursor: "pointer",
-                background: diff === k ? "var(--accent)" : "transparent",
-                color: diff === k ? "#000" : "var(--fg-dim)",
-                borderRight: i < a.length - 1 ? "2px solid var(--fg)" : "none",
-              }}
-            >
-              {l}
-            </button>
-          ))}
-        </div>
+        {showGrades && (
+          <div style={{ display: "flex", border: "2px solid var(--fg)" }}>
+            {[
+              ["", "ВСЕ"],
+              ["JUNIOR", "JR"],
+              ["MIDDLE", "MD"],
+              ["SENIOR", "SR"],
+            ].map(([k, l], i, a) => (
+              <button
+                key={k || "all"}
+                onClick={() => setDiff(k)}
+                className="mono"
+                style={{
+                  padding: "10px 16px",
+                  border: "none",
+                  cursor: "pointer",
+                  background: diff === k ? "var(--accent)" : "transparent",
+                  color: diff === k ? "#000" : "var(--fg-dim)",
+                  borderRight: i < a.length - 1 ? "2px solid var(--fg)" : "none",
+                }}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
+        )}
       </section>
 
       <section style={{ padding: "32px 28px 0", maxWidth: 1280, margin: "0 auto" }}>
@@ -147,7 +153,7 @@ export default function Recordings() {
               target="_blank"
               rel="noopener noreferrer"
               data-testid={`interview-${iv.id}`}
-              className="card-brutal"
+              className="card-solid"
               style={{ display: "block", color: "var(--fg)" }}
             >
               <ThumbImg src={iv.thumbnailUrl} />
@@ -341,9 +347,9 @@ export function Pagination({ page, totalPages, onChange }) {
   const pages = pageRange(page, totalPages);
 
   const btn = (active) => ({
-    minWidth: 40,
-    height: 40,
-    padding: "0 10px",
+    minWidth: 36,
+    height: 36,
+    padding: "0 8px",
     fontFamily: "'Space Mono', monospace",
     fontSize: 12,
     border: "2px solid var(--fg)",
@@ -351,6 +357,7 @@ export function Pagination({ page, totalPages, onChange }) {
     color: active ? "#000" : "var(--fg)",
     cursor: "pointer",
     fontWeight: 700,
+    flexShrink: 0,
   });
 
   return (
@@ -359,10 +366,13 @@ export function Pagination({ page, totalPages, onChange }) {
       style={{
         display: "flex",
         justifyContent: "center",
-        gap: 8,
+        gap: 6,
         marginTop: 40,
-        flexWrap: "wrap",
+        flexWrap: "nowrap",
         alignItems: "center",
+        overflowX: "auto",
+        WebkitOverflowScrolling: "touch",
+        padding: "4px 0",
       }}
     >
       <button
@@ -398,7 +408,6 @@ export function Pagination({ page, totalPages, onChange }) {
   );
 }
 
-/* поле ввода номера страницы вместо «…» */
 function PageJumpInput({ totalPages, onJump }) {
   const [val, setVal] = useState("");
 
@@ -431,8 +440,8 @@ function PageJumpInput({ totalPages, onJump }) {
       data-testid="page-jump-input"
       className="mono"
       style={{
-        width: 56,
-        height: 40,
+        width: 48,
+        height: 36,
         textAlign: "center",
         fontFamily: "'Space Mono', monospace",
         fontSize: 13,
@@ -443,6 +452,7 @@ function PageJumpInput({ totalPages, onJump }) {
         outline: "none",
         cursor: "text",
         boxSizing: "border-box",
+        flexShrink: 0,
       }}
     />
   );

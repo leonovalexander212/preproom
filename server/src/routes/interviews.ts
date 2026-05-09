@@ -1,7 +1,11 @@
 import { Router } from 'express';
+import { existsSync } from 'fs';
+import { join } from 'path';
 import { prisma } from '../lib/prisma';
 
 const router = Router();
+
+const THUMBS_DIR = join(__dirname, '..', '..', 'public', 'thumbs');
 
 /** Извлекает VIDEO_ID из любого формата YouTube URL */
 function extractVideoId(url: string): string | null {
@@ -19,7 +23,11 @@ function extractVideoId(url: string): string | null {
 
 function makeThumbnail(videoUrl: string): string | null {
   const id = extractVideoId(videoUrl);
-  return id ? `https://img.youtube.com/vi/${id}/mqdefault.jpg` : null;
+  if (!id) return null;
+  if (existsSync(join(THUMBS_DIR, `${id}.jpg`))) {
+    return `/static/thumbs/${id}.jpg`;
+  }
+  return `/api/interviews/thumb/${id}`;
 }
 
 function parseDifficulty(title: string): string {
@@ -73,6 +81,37 @@ router.get('/', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+const thumbCache = new Map<string, { buf: Buffer; ct: string; ts: number }>();
+const THUMB_TTL = 1000 * 60 * 60 * 24;
+
+router.get('/thumb/:videoId', async (req, res) => {
+  const { videoId } = req.params;
+  if (!/^[\w-]{6,20}$/.test(videoId)) return res.status(400).end();
+
+  const cached = thumbCache.get(videoId);
+  if (cached && Date.now() - cached.ts < THUMB_TTL) {
+    res.set('Content-Type', cached.ct);
+    res.set('Cache-Control', 'public, max-age=86400');
+    return res.send(cached.buf);
+  }
+
+  try {
+    const url = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+    const resp = await fetch(url);
+    if (!resp.ok) return res.status(502).end();
+
+    const buf = Buffer.from(await resp.arrayBuffer());
+    const ct = resp.headers.get('content-type') || 'image/jpeg';
+    thumbCache.set(videoId, { buf, ct, ts: Date.now() });
+
+    res.set('Content-Type', ct);
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.send(buf);
+  } catch {
+    res.status(502).end();
   }
 });
 

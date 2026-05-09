@@ -5,7 +5,6 @@ const PALETTE = {
   dark:  {
     bg: "#0a0a0a", grid: "#222222", gridAccent: "#e5ff00",
     star: 0xffffff, starOp: 0.6,
-    // 0: жёлтый, 1: белый, 2: оранж, 3: зелёный
     wire: ["#e5ff00", "#ffffff", "#ff5b00", "#00ff88"],
   },
   light: {
@@ -136,7 +135,7 @@ const TEXTURES = {
   }),
 };
 
-export default function BrutalScene({ theme = "dark" }) {
+export default function BackgroundScene({ theme = "dark" }) {
   const mountRef = useRef(null);
   const apiRef = useRef(null);
 
@@ -152,8 +151,8 @@ export default function BrutalScene({ theme = "dark" }) {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.6));
     renderer.setSize(width, height);
-    renderer.domElement.style.opacity = "0.55";
-    renderer.domElement.style.filter = "saturate(0.7)";
+    renderer.domElement.style.opacity = "0.42";
+    renderer.domElement.style.filter = "saturate(0.55) blur(1px)";
     mount.appendChild(renderer.domElement);
 
     const root = new THREE.Group();
@@ -166,19 +165,6 @@ export default function BrutalScene({ theme = "dark" }) {
     grid2.position.z = -120;
     gridGroup.add(grid1); gridGroup.add(grid2);
     root.add(gridGroup);
-
-    const count = 600;
-    const positions = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      positions[i*3]   = (Math.random()-0.5)*80;
-      positions[i*3+1] = (Math.random()-0.5)*50;
-      positions[i*3+2] = (Math.random()-0.5)*80;
-    }
-    const starsGeom = new THREE.BufferGeometry();
-    starsGeom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    const starsMat = new THREE.PointsMaterial({ size: 0.05, color: 0xffffff, transparent: true, opacity: 0.6 });
-    const stars = new THREE.Points(starsGeom, starsMat);
-    root.add(stars);
 
     // ===== ПЛАНЕТЫ =====
     // Меркурий убран: при низком pixelRatio он рендерился пиксельным
@@ -265,8 +251,6 @@ export default function BrutalScene({ theme = "dark" }) {
         g.material.forEach?.((m, i) => m.color.set(i === 0 ? p.gridAccent : p.grid));
         if (!Array.isArray(g.material)) g.material.color.set(p.grid);
       });
-      starsMat.color.setHex(p.star);
-      starsMat.opacity = p.starOp;
       planets.forEach((g) => {
         const color = p.wire[g.userData.paletteIdx];
         if (g.userData.tint) g.userData.tint.material.color.set(color);
@@ -298,7 +282,6 @@ export default function BrutalScene({ theme = "dark" }) {
     const animate = () => {
       const t = clock.getElapsedTime();
       gridGroup.position.z = (t * 1.6) % 4;
-      stars.rotation.y = t * 0.006;
       planets.forEach((g) => {
         const u = g.userData;
         g.rotation.y = t * u.speed;
@@ -307,8 +290,6 @@ export default function BrutalScene({ theme = "dark" }) {
         g.position.x = u.basePos[0] + Math.cos(t*0.25 + u.phase) * o;
         g.position.y = u.basePos[1] + Math.sin(t*0.35 + u.phase) * o * 0.7;
       });
-      // Существенно смягчили реакцию сцены на курсор —
-      // больше нет ощущения, что геометрия "следует" за мышкой.
       root.rotation.y += (mouse.x*0.12 - root.rotation.y) * 0.02;
       root.rotation.x += (mouse.y*0.06 - root.rotation.x) * 0.02;
       renderer.render(scene, camera);
@@ -332,7 +313,6 @@ export default function BrutalScene({ theme = "dark" }) {
       });
       Object.values(textureCache).forEach((t) => t.dispose());
       grid1.geometry.dispose(); grid2.geometry.dispose();
-      starsGeom.dispose(); starsMat.dispose();
       renderer.dispose();
     };
   }, []);
