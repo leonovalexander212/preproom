@@ -1841,3 +1841,29 @@ footer {
     font-size: clamp(34px, 3vw, 44px) !important;
   }
 }
+/* ── Файловые SVG-иконки (img) ───────────────────── */
+.domain-icon--img {
+  display: block;
+  transition: transform 400ms cubic-bezier(.2,.8,.2,1), filter 200ms ease;
+}
+
+/* Тёмная тема: иконки белые */
+[data-theme="dark"] .domain-icon--img,
+.domain-icon--img {
+  filter: invert(1) brightness(1.1);
+}
+
+/* При наведении: инвертируем в чёрный (фон жёлтый) */
+.domain-card:hover .domain-icon--img {
+  filter: invert(0) brightness(0) !important;
+  transform: rotate(-4deg) scale(1.1);
+}
+
+/* Светлая тема: иконки тёмные */
+[data-theme="light"] .domain-icon--img {
+  filter: invert(0) brightness(0.2);
+}
+
+[data-theme="light"] .domain-card:hover .domain-icon--img {
+  filter: invert(0) brightness(0) !important;
+}
