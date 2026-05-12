@@ -1845,25 +1845,27 @@ footer {
 .domain-icon--img {
   display: block;
   transition: transform 400ms cubic-bezier(.2,.8,.2,1), filter 200ms ease;
+  filter: invert(1) brightness(1.0);
 }
-
-/* Тёмная тема: иконки белые */
-[data-theme="dark"] .domain-icon--img,
-.domain-icon--img {
-  filter: invert(1) brightness(1.1);
-}
-
-/* При наведении: инвертируем в чёрный (фон жёлтый) */
 .domain-card:hover .domain-icon--img {
   filter: invert(0) brightness(0) !important;
   transform: rotate(-4deg) scale(1.1);
 }
-
-/* Светлая тема: иконки тёмные */
 [data-theme="light"] .domain-icon--img {
-  filter: invert(0) brightness(0.2);
+  filter: invert(0) brightness(0.15);
 }
-
 [data-theme="light"] .domain-card:hover .domain-icon--img {
   filter: invert(0) brightness(0) !important;
+}
+
+/* ── SVG-нарисованные иконки — тоже белые в тёмной теме ── */
+.domain-icon {
+  color: var(--fg) !important;
+}
+.domain-card:hover .domain-icon {
+  color: #000 !important;
+}
+[data-theme="light"] .domain-icon {
+  color: #1a1a1a !important;
+  filter: none !important;
 }
