@@ -37,3 +37,7 @@ server/data/*-dedupe-suggestions.json
 
 # Coverage
 coverage/
+
+
+# Данные вопросов (приватные)
+направления/
