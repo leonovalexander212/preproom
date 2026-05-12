@@ -23,7 +23,15 @@
 
 <br>
 
-<img src="docs/preview-landing.png" alt="PrepRoom Landing" width="100%">
+<img src="docs/1.png" alt="PrepRoom Landing" width="100%">
+
+<br>
+
+<img src="docs/2.png" alt="PrepRoom Questions" width="100%">
+
+<br>
+
+<img src="docs/3.png" alt="PrepRoom Mock Interview" width="100%">
 
 </div>
 
