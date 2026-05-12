@@ -104,7 +104,7 @@ function DirectionTestPopup({ onClose }) {
           <span style={{ color: "var(--accent-ink)" }}>С ЧЕГО НАЧАТЬ?</span>
         </div>
         <p style={{ marginTop: 18, color: "var(--fg-dim)", fontSize: 14, lineHeight: 1.6 }}>
-          Ответь на 8 вопросов и мы подберём IT-направление для тебя.
+          Ответь на 10 вопросов и мы подберём IT-направление для тебя.
           Никаких тяжёлых терминов. Честно. Всего 2 минуты.
         </p>
         <div style={{ display: "flex", gap: 10, marginTop: 24, flexWrap: "wrap" }}>
