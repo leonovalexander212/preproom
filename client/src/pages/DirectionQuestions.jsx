@@ -208,7 +208,7 @@ export default function DirectionQuestions() {
           .direction-questions-title {
             width: 100%;
             max-width: calc(100vw - 32px);
-            font-size: clamp(46px, 17vw, 86px) !important;
+            font-size: clamp(20px, 9.5vw, 64px) !important;
             line-height: 0.86 !important;
             text-align: center !important;
             overflow: hidden;
@@ -323,7 +323,7 @@ export default function DirectionQuestions() {
             style={{
               fontSize: "clamp(48px, 7vw, 110px)", margin: 0, color: "var(--fg)",
               pointerEvents: "none", minWidth: 0, lineHeight: 1.05,
-              wordBreak: "normal", overflowWrap: "anywhere",
+              wordBreak: "keep-all", overflowWrap: "normal", hyphens: "none",
             }}
           >
             <span className="glitch" data-text={data?.direction?.name || slug?.toUpperCase()} style={{ whiteSpace: "normal", overflowWrap: "anywhere" }}>
