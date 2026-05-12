@@ -41,3 +41,7 @@ coverage/
 
 # Данные вопросов (приватные)
 направления/
+
+# Allow thumbnails
+!server/public/thumbs/
+!server/public/thumbs/*.jpg
