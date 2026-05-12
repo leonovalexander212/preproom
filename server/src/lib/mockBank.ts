@@ -17,7 +17,7 @@ export const DIRECTIONS: DirectionMeta[] = [
   { slug: 'java',     label: 'JAVA',     dbSlug: 'java',     language: 'java',       available: true },
   { slug: 'frontend', label: 'FRONTEND', dbSlug: 'frontend', language: 'javascript', available: true },
   { slug: 'php',      label: 'PHP',      dbSlug: 'php',      language: 'php',        available: true },
-  { slug: 'csharp',   label: 'C#',       dbSlug: 'csharp',   language: 'csharp',     available: false, disabledReason: 'В БД пока нет вопросов с реальных собеседований' },
+  { slug: 'csharp',   label: 'C#',       dbSlug: 'csharp',   language: 'csharp',     available: true },
 ];
 
 export const GRADES: { slug: Grade; label: string; hint: string; available: boolean; disabledReason?: string }[] = [
