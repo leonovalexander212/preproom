@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'preproom-server',
-      script: './server/dist/index.js',
+      script: './server/dist/src/index.js',
       instances: 1,
       exec_mode: 'fork',
       env: {
