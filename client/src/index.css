@@ -1841,19 +1841,27 @@ footer {
     font-size: clamp(34px, 3vw, 44px) !important;
   }
 }
-/* ── Файловые SVG-иконки (img) — жёлтые #e5ff00 ── */
-.domain-icon--img {
+/* ── Файловые SVG-иконки (img) — жёлтые через mask ── */
+.domain-icon--mask {
   display: block;
-  transition: transform 400ms cubic-bezier(.2,.8,.2,1), filter 200ms ease;
-  filter: brightness(0) saturate(100%) invert(96%) sepia(52%) saturate(701%) hue-rotate(19deg) brightness(103%);
+  width: 52px;
+  height: 52px;
+  background-color: var(--accent);
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  transition: transform 400ms cubic-bezier(.2,.8,.2,1), background-color 200ms ease;
 }
-.domain-card:hover .domain-icon--img {
-  filter: brightness(0) !important;
+.domain-card:hover .domain-icon--mask {
+  background-color: #000;
   transform: rotate(-4deg) scale(1.1);
 }
-[data-theme="light"] .domain-icon--img {
-  filter: brightness(0) saturate(100%) invert(50%) sepia(80%) saturate(600%) hue-rotate(25deg) brightness(85%);
+[data-theme="light"] .domain-icon--mask {
+  background-color: #8b9900;
 }
-[data-theme="light"] .domain-card:hover .domain-icon--img {
-  filter: brightness(0) !important;
+[data-theme="light"] .domain-card:hover .domain-icon--mask {
+  background-color: #000;
 }
