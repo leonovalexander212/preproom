@@ -2,15 +2,16 @@ module.exports = {
   apps: [
     {
       name: 'preproom-server',
-      script: './server/dist/src/index.js',
+      script: './dist/src/index.js',
+      cwd: '/root/preproom/server',
       instances: 1,
       exec_mode: 'fork',
       env: {
         NODE_ENV: 'production',
         PORT: 4000,
       },
-      error_file: './logs/err.log',
-      out_file: './logs/out.log',
+      error_file: '/root/preproom/logs/err.log',
+      out_file: '/root/preproom/logs/out.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       merge_logs: true,
       max_memory_restart: '512M',
