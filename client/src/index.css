@@ -1865,3 +1865,26 @@ footer {
 [data-theme="light"] .domain-card:hover .domain-icon--mask {
   background-color: #000;
 }
+
+/* ── Fix: при ховере карточки весь текст чёрный ── */
+.domain-card:hover,
+.domain-card:hover * {
+  color: #000 !important;
+}
+.domain-card:hover .domain-icon--mask {
+  background-color: #000 !important;
+}
+.domain-card:hover .glitch::before,
+.domain-card:hover .glitch::after {
+  color: #000 !important;
+}
+/* На мобильных карточка не инвертируется — текст остаётся светлым */
+@media (max-width: 831px) {
+  .domain-card:hover,
+  .domain-card:hover * {
+    color: var(--fg) !important;
+  }
+  .domain-card:hover .domain-icon--mask {
+    background-color: var(--accent) !important;
+  }
+}

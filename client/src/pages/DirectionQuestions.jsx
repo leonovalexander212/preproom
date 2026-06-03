@@ -326,7 +326,7 @@ export default function DirectionQuestions() {
               wordBreak: "keep-all", overflowWrap: "normal", hyphens: "none",
             }}
           >
-            <span className="glitch" data-text={data?.direction?.name || slug?.toUpperCase()} style={{ whiteSpace: "normal", overflowWrap: "anywhere" }}>
+            <span className="glitch" data-text={data?.direction?.name || slug?.toUpperCase()} style={{ whiteSpace: "nowrap", display: "inline-block" }}>
               {data?.direction?.name || slug?.toUpperCase()}
             </span>
           </h1>
