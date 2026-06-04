@@ -149,6 +149,15 @@ export default function DirectionQuestions() {
         .direction-questions-title .glitch {
           min-width: 0;
           max-width: 100%;
+          white-space: normal;
+          word-break: keep-all;
+          overflow-wrap: normal;
+          hyphens: none;
+        }
+
+        .direction-questions-title {
+          font-size: clamp(48px, 7vw, 110px);
+          line-height: 0.95;
         }
 
         .direction-questions-title .glitch {
@@ -166,11 +175,13 @@ export default function DirectionQuestions() {
           }
 
           .direction-questions-title {
-            overflow: hidden;
+            overflow: visible;
           }
 
           .direction-questions-title .glitch {
-            white-space: nowrap;
+            white-space: normal;
+            word-break: keep-all;
+            overflow-wrap: normal;
           }
 
           .dq-counter-box {
