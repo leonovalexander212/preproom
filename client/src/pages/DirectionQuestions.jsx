@@ -65,41 +65,64 @@ function useViewportWidth() {
   return width;
 }
 
-// Авто-подгонка размера заголовка: ужимает шрифт пока текст не влезет в одну строку
-function AutoFitTitle({ text, className, maxFont = 110, minFont = 16 }) {
+// Авто-подгонка заголовка: однословные ужимаются в строку, многословные переносятся по словам
+function AutoFitTitle({ text, className, maxFont = 110, minFont = 20 }) {
   const wrapRef = useRef(null);
   const textRef = useRef(null);
   const [fontSize, setFontSize] = useState(maxFont);
+  const [wrap, setWrap] = useState(false);
+
+  // Многословное название (есть пробел или слэш) можно переносить
+  const multiWord = /[\s/]/.test((text || "").trim());
 
   React.useLayoutEffect(() => {
-    const wrap = wrapRef.current;
+    const wrapEl = wrapRef.current;
     const el = textRef.current;
-    if (!wrap || !el) return;
+    if (!wrapEl || !el) return;
 
     const fit = () => {
-      const avail = wrap.clientWidth;
+      const avail = wrapEl.clientWidth;
       if (!avail) return;
+
+      // Сначала пробуем в одну строку
+      el.style.whiteSpace = "nowrap";
       let size = maxFont;
       el.style.fontSize = size + "px";
-      // Ужимаем пока ширина текста больше доступной
       let guard = 0;
-      while (el.scrollWidth > avail && size > minFont && guard < 200) {
+      while (el.scrollWidth > avail && size > minFont && guard < 300) {
         size -= 1;
         el.style.fontSize = size + "px";
         guard++;
       }
+
+      // Если упёрлись в минимум и текст всё ещё не влез — для многословных разрешаем перенос
+      if (el.scrollWidth > avail && multiWord) {
+        setWrap(true);
+        el.style.whiteSpace = "normal";
+        // Подбираем размер заново с переносом (по высоте не ограничиваем, просто чтоб по ширине влезало)
+        size = maxFont;
+        el.style.fontSize = size + "px";
+        guard = 0;
+        while (el.scrollWidth > avail && size > minFont && guard < 300) {
+          size -= 1;
+          el.style.fontSize = size + "px";
+          guard++;
+        }
+      } else {
+        setWrap(false);
+      }
+
       setFontSize(size);
     };
 
     fit();
     const ro = new ResizeObserver(fit);
-    ro.observe(wrap);
-    // Перезапуск после загрузки шрифтов
+    ro.observe(wrapEl);
     if (document.fonts && document.fonts.ready) {
       document.fonts.ready.then(fit);
     }
     return () => ro.disconnect();
-  }, [text, maxFont, minFont]);
+  }, [text, maxFont, minFont, multiWord]);
 
   return (
     <div ref={wrapRef} style={{ width: "100%", minWidth: 0, overflow: "hidden" }}>
@@ -109,11 +132,13 @@ function AutoFitTitle({ text, className, maxFont = 110, minFont = 16 }) {
         data-testid="direction-questions-title"
         style={{
           fontSize: fontSize + "px", margin: 0, color: "var(--fg)",
-          pointerEvents: "none", lineHeight: 1.05, whiteSpace: "nowrap",
-          display: "inline-block", maxWidth: "100%",
+          pointerEvents: "none", lineHeight: 1.02,
+          whiteSpace: wrap ? "normal" : "nowrap",
+          wordBreak: "keep-all", overflowWrap: "normal",
+          display: "block", maxWidth: "100%",
         }}
       >
-        <span className="glitch" data-text={text} style={{ whiteSpace: "nowrap", display: "inline-block" }}>
+        <span className="glitch" data-text={text} style={{ whiteSpace: "inherit" }}>
           {text}
         </span>
       </h1>
@@ -222,7 +247,6 @@ export default function DirectionQuestions() {
           }
 
           .direction-questions-title {
-            font-size: clamp(48px, 7vw, 110px) !important;
             overflow: hidden;
           }
 
@@ -262,7 +286,6 @@ export default function DirectionQuestions() {
           .direction-questions-title {
             width: 100%;
             max-width: calc(100vw - 32px);
-            font-size: clamp(20px, 9.5vw, 64px) !important;
             line-height: 0.86 !important;
             text-align: center !important;
             overflow: hidden;
@@ -330,7 +353,6 @@ export default function DirectionQuestions() {
 
           .direction-questions-title {
             max-width: calc(100vw - 24px);
-            font-size: clamp(42px, 16vw, 74px) !important;
           }
 
           .dq-counter-box {
@@ -373,7 +395,7 @@ export default function DirectionQuestions() {
              text={data?.direction?.name || slug?.toUpperCase() || ""}
              className="display direction-questions-title dq-direction-title"
              maxFont={110}
-             minFont={16}
+             minFont={22}
            />
           <div className="dq-counter-box" data-testid="dq-counter-box" style={{
             border: "2px solid var(--fg)", padding: "20px 28px",
