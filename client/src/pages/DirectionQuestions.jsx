@@ -126,6 +126,18 @@ export default function DirectionQuestions() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE));
   const pageItems = filtered.slice((page - 1) * PAGE, page * PAGE);
 
+  // Состояние загрузки — пока данных нет, не рендерим hero с заглушками
+  // (иначе мелькают slug вместо имени, грейды у безгрейдовых направлений и т.п.)
+  if (!data && !error) {
+    return (
+      <div className="dq-page" style={{ position: "relative", zIndex: 2, paddingTop: 100, minHeight: "60vh", display: "grid", placeItems: "center" }}>
+        <div className="mono" style={{ color: "var(--fg-dim)", letterSpacing: "0.3em", fontSize: 14, opacity: 0.7 }}>
+          // ЗАГРУЗКА...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div ref={root} className="dq-page" style={{ position: "relative", zIndex: 2, paddingTop: 100 }}>
       <style>{`
