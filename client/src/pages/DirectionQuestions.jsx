@@ -65,87 +65,6 @@ function useViewportWidth() {
   return width;
 }
 
-// Авто-подгонка заголовка: однословные ужимаются в строку, многословные переносятся по словам
-function AutoFitTitle({ text, className, maxFont = 110, minFont = 20 }) {
-  const wrapRef = useRef(null);
-  const textRef = useRef(null);
-  const [fontSize, setFontSize] = useState(maxFont);
-  const [wrap, setWrap] = useState(false);
-
-  // Многословное название (есть пробел или слэш) можно переносить
-  const multiWord = /[\s/]/.test((text || "").trim());
-
-  React.useLayoutEffect(() => {
-    const wrapEl = wrapRef.current;
-    const el = textRef.current;
-    if (!wrapEl || !el) return;
-
-    const fit = () => {
-      const avail = wrapEl.clientWidth;
-      if (!avail) return;
-
-      // Сначала пробуем в одну строку
-      el.style.whiteSpace = "nowrap";
-      let size = maxFont;
-      el.style.fontSize = size + "px";
-      let guard = 0;
-      while (el.scrollWidth > avail && size > minFont && guard < 300) {
-        size -= 1;
-        el.style.fontSize = size + "px";
-        guard++;
-      }
-
-      // Если упёрлись в минимум и текст всё ещё не влез — для многословных разрешаем перенос
-      if (el.scrollWidth > avail && multiWord) {
-        setWrap(true);
-        el.style.whiteSpace = "normal";
-        // Подбираем размер заново с переносом (по высоте не ограничиваем, просто чтоб по ширине влезало)
-        size = maxFont;
-        el.style.fontSize = size + "px";
-        guard = 0;
-        while (el.scrollWidth > avail && size > minFont && guard < 300) {
-          size -= 1;
-          el.style.fontSize = size + "px";
-          guard++;
-        }
-      } else {
-        setWrap(false);
-      }
-
-      setFontSize(size);
-    };
-
-    fit();
-    const ro = new ResizeObserver(fit);
-    ro.observe(wrapEl);
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(fit);
-    }
-    return () => ro.disconnect();
-  }, [text, maxFont, minFont, multiWord]);
-
-  return (
-    <div ref={wrapRef} style={{ width: "100%", minWidth: 0, overflow: "hidden" }}>
-      <h1
-        ref={textRef}
-        className={className}
-        data-testid="direction-questions-title"
-        style={{
-          fontSize: fontSize + "px", margin: 0, color: "var(--fg)",
-          pointerEvents: "none", lineHeight: 1.02,
-          whiteSpace: wrap ? "normal" : "nowrap",
-          wordBreak: "keep-all", overflowWrap: "normal",
-          display: "block", maxWidth: "100%",
-        }}
-      >
-        <span className="glitch" data-text={text} style={{ whiteSpace: "inherit" }}>
-          {text}
-        </span>
-      </h1>
-    </div>
-  );
-}
-
 export default function DirectionQuestions() {
   const { slug } = useParams();
   const [data, setData] = useState(null);
@@ -391,12 +310,15 @@ export default function DirectionQuestions() {
         </div>
 
         <div className="dq-header-grid" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(150px, 220px)", gap: 40, alignItems: "end" }}>
-           <AutoFitTitle
-             text={data?.direction?.name || slug?.toUpperCase() || ""}
+           <h1
              className="display direction-questions-title dq-direction-title"
-             maxFont={110}
-             minFont={22}
-           />
+             data-testid="direction-questions-title"
+             style={{ margin: 0, color: "var(--fg)", pointerEvents: "none", minWidth: 0 }}
+           >
+             <span className="glitch" data-text={data?.direction?.name || slug?.toUpperCase() || ""}>
+               {data?.direction?.name || slug?.toUpperCase() || ""}
+             </span>
+           </h1>
           <div className="dq-counter-box" data-testid="dq-counter-box" style={{
             border: "2px solid var(--fg)", padding: "20px 28px",
             background: "var(--card)", boxShadow: "6px 6px 0 var(--accent)",
