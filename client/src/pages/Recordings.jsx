@@ -344,20 +344,21 @@ function Dropdown({ value, onChange, options, placeholder }) {
 
 /* ===== Pagination ===== */
 export function Pagination({ page, totalPages, onChange }) {
-  const pages = pageRange(page, totalPages);
+  if (totalPages <= 1) return null;
 
-  const btn = (active) => ({
-    minWidth: 36,
-    height: 36,
-    padding: "0 8px",
+  const arrowBtn = (disabled) => ({
+    width: 44,
+    height: 40,
     fontFamily: "'Space Mono', monospace",
-    fontSize: 12,
+    fontSize: 16,
     border: "2px solid var(--fg)",
-    background: active ? "var(--accent)" : "var(--card)",
-    color: active ? "#000" : "var(--fg)",
-    cursor: "pointer",
+    background: "var(--card)",
+    color: "var(--fg)",
+    cursor: disabled ? "default" : "pointer",
     fontWeight: 700,
+    opacity: disabled ? 0.35 : 1,
     flexShrink: 0,
+    transition: "background 140ms ease, color 140ms ease",
   });
 
   return (
@@ -366,128 +367,45 @@ export function Pagination({ page, totalPages, onChange }) {
       style={{
         display: "flex",
         justifyContent: "center",
-        gap: 6,
-        marginTop: 40,
-        flexWrap: "nowrap",
         alignItems: "center",
-        overflowX: "auto",
-        WebkitOverflowScrolling: "touch",
+        gap: 16,
+        marginTop: 40,
         padding: "4px 0",
       }}
     >
       <button
         disabled={page === 1}
         onClick={() => onChange(page - 1)}
-        style={{ ...btn(false), opacity: page === 1 ? 0.4 : 1 }}
+        style={arrowBtn(page === 1)}
+        aria-label="Предыдущая страница"
       >
         ←
       </button>
 
-      {pages.map((p, i) =>
-        p === "..." ? (
-          <PageJumpInput
-            key={`d${i}`}
-            totalPages={totalPages}
-            onJump={onChange}
-          />
-        ) : (
-          <button key={p} onClick={() => onChange(p)} style={btn(p === page)}>
-            {p}
-          </button>
-        )
-      )}
+      <div
+        className="mono"
+        data-testid="pagination-info"
+        style={{
+          fontFamily: "'Space Mono', monospace",
+          fontSize: 13,
+          letterSpacing: "0.12em",
+          color: "var(--fg)",
+          minWidth: 150,
+          textAlign: "center",
+          userSelect: "none",
+        }}
+      >
+        СТРАНИЦА <span style={{ color: "var(--accent-ink)", fontWeight: 700 }}>{page}</span> ИЗ {totalPages}
+      </div>
 
       <button
         disabled={page === totalPages}
         onClick={() => onChange(page + 1)}
-        style={{ ...btn(false), opacity: page === totalPages ? 0.4 : 1 }}
+        style={arrowBtn(page === totalPages)}
+        aria-label="Следующая страница"
       >
         →
       </button>
     </div>
   );
-}
-
-function PageJumpInput({ totalPages, onJump }) {
-  const [val, setVal] = useState("");
-
-  const submit = () => {
-    const n = parseInt(val, 10);
-    if (!Number.isNaN(n)) {
-      const clamped = Math.min(Math.max(1, n), totalPages);
-      onJump(clamped);
-    }
-    setVal("");
-  };
-
-  return (
-    <input
-      type="text"
-      inputMode="numeric"
-      pattern="[0-9]*"
-      value={val}
-      onChange={(e) => setVal(e.target.value.replace(/\D/g, ""))}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          submit();
-          e.currentTarget.blur();
-        }
-      }}
-      onBlur={submit}
-      placeholder="…"
-      title={`Введите номер страницы (1–${totalPages}) и нажмите Enter`}
-      data-testid="page-jump-input"
-      className="mono"
-      style={{
-        width: 48,
-        height: 36,
-        textAlign: "center",
-        fontFamily: "'Space Mono', monospace",
-        fontSize: 13,
-        fontWeight: 700,
-        border: "2px dashed var(--fg)",
-        background: "var(--card)",
-        color: "var(--fg)",
-        outline: "none",
-        cursor: "text",
-        boxSizing: "border-box",
-        flexShrink: 0,
-      }}
-    />
-  );
-}
-
-/* ===== helper ===== */
-function pageRange(current, total) {
-  // Всегда показываем: 1 … [окно из 3 вокруг текущей] … last
-  // Структура стабильна, окно не прыгает.
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, i) => i + 1);
-  }
-
-  const out = [];
-  const SIBLINGS = 1; // соседей с каждой стороны от текущей
-
-  // Границы окна вокруг текущей
-  let start = current - SIBLINGS;
-  let end = current + SIBLINGS;
-
-  // Сдвигаем окно от краёв, чтобы ширина была постоянной (3 числа)
-  if (start < 2) {
-    start = 2;
-    end = start + SIBLINGS * 2;
-  }
-  if (end > total - 1) {
-    end = total - 1;
-    start = end - SIBLINGS * 2;
-  }
-
-  out.push(1);
-  if (start > 2) out.push("..."); // многоточие слева
-  for (let i = start; i <= end; i++) out.push(i);
-  if (end < total - 1) out.push("..."); // многоточие справа
-  out.push(total);
-
-  return out;
 }
