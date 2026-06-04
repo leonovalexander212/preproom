@@ -318,29 +318,18 @@ function ContactCard({ label, value, href, testid }) {
       target={href.startsWith("http") ? "_blank" : undefined}
       rel="noopener noreferrer"
       data-testid={testid}
+      className="contact-card"
       style={{
         display: "block", padding: "18px 20px", color: "var(--fg)",
         border: "2px solid var(--fg)", background: "var(--card)",
         textDecoration: "none",
         transition: "background 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease",
       }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = "#e5ff00";
-        e.currentTarget.style.color = "#000";
-        e.currentTarget.style.transform = "translate(-2px,-2px)";
-        e.currentTarget.style.boxShadow = "6px 6px 0 var(--fg)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = "var(--card)";
-        e.currentTarget.style.color = "var(--fg)";
-        e.currentTarget.style.transform = "translate(0,0)";
-        e.currentTarget.style.boxShadow = "none";
-      }}
     >
-      <div className="mono" style={{ fontSize: 10, letterSpacing: "0.22em", color: "var(--accent-ink)" }}>
+      <div className="mono contact-card-label" style={{ fontSize: 10, letterSpacing: "0.22em" }}>
         {label}
       </div>
-      <div style={{
+      <div className="contact-card-value" style={{
         marginTop: 8, fontSize: 15, lineHeight: 1.35, fontWeight: 600,
         wordBreak: "break-all", overflowWrap: "anywhere",
       }}>

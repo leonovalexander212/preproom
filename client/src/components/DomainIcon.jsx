@@ -1,37 +1,30 @@
 import React, { useState } from "react";
 
-// Slug → SVG-файл (только те у кого есть файл в /icons/)
 const ICON_FILES = {
-  "go":               "/icons/go.svg",
-  "rust":             "/icons/rust.svg",
-  "csharp":           "/icons/csharp.svg",
-  "cpp":              "/icons/cpp.svg",
-  "android":          "/icons/android.svg",
-  "devops":           "/icons/devops.svg",
-  "aqa":              "/icons/aqa.svg",
-  "data-science":     "/icons/data-science.svg",
-  "data-analyst":     "/icons/data-analyst.svg",
-  "data-engineer":    "/icons/data-engineer.svg",
-  "ai-engineer":      "/icons/ai-engineer.svg",
-  "unity":            "/icons/unity.svg",
-  "3d-artist":        "/icons/three-d.svg",
-  "seo":              "/icons/seo.svg",
-  "product-manager":  "/icons/product-manager.svg",
+  "go": "/icons/go.svg",
+  "rust": "/icons/rust.svg",
+  "csharp": "/icons/csharp.svg",
+  "cpp": "/icons/cpp.svg",
+  "android": "/icons/android.svg",
+  "devops": "/icons/devops.svg",
+  "aqa": "/icons/aqa.svg",
+  "data-science": "/icons/data-science.svg",
+  "data-analyst": "/icons/data-analyst.svg",
+  "data-engineer": "/icons/data-engineer.svg",
+  "ai-engineer": "/icons/ai-engineer.svg",
+  "unity": "/icons/unity.svg",
+  "3d-artist": "/icons/three-d.svg",
+  "seo": "/icons/seo.svg",
+  "product-manager": "/icons/product-manager.svg",
   "business-analyst": "/icons/business-analyst.svg",
   "reverse-engineer": "/icons/reverse-engineer.svg",
-  "1c":               "/icons/1c.svg",
+  "1c": "/icons/1c.svg",
 };
 
 const SVG_BASE = {
-  width: 56,
-  height: 56,
-  viewBox: "0 0 64 64",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 2.2,
-  strokeLinecap: "round",
-  strokeLinejoin: "round",
-  overflow: "visible",
+  width: 56, height: 56, viewBox: "0 0 64 64", fill: "none",
+  stroke: "currentColor", strokeWidth: 2.2, strokeLinecap: "round",
+  strokeLinejoin: "round", overflow: "visible",
 };
 
 export default function DomainIcon({ slug, hasContent = true, size = 52 }) {
@@ -40,28 +33,25 @@ export default function DomainIcon({ slug, hasContent = true, size = 52 }) {
 
   if (!hasContent) return <UnknownIcon />;
 
-  // Файловые иконки для направлений с SVG
   const fileSrc = ICON_FILES[s];
   if (fileSrc && !errored) {
     return (
-      <img
-        src={fileSrc}
-        alt={slug}
-        width={size}
-        height={size}
-        className="domain-icon domain-icon--img"
-        onError={() => setErrored(true)}
+      <span
+        className="domain-icon domain-icon--mask"
+        role="img"
+        aria-label={slug}
         style={{
-          objectFit: "contain",
-          display: "block",
-          filter: "var(--icon-filter, invert(1))",
-          transition: "transform 220ms ease, filter 220ms ease",
+          width: size, height: size, display: "block",
+          WebkitMaskImage: `url(${fileSrc})`, maskImage: `url(${fileSrc})`,
+          WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat",
+          WebkitMaskPosition: "center", maskPosition: "center",
+          WebkitMaskSize: "contain", maskSize: "contain",
+          transition: "transform 220ms ease, background-color 200ms ease",
         }}
       />
     );
   }
 
-  // Рисованные иконки для python, java, php, qa, frontend
   if (s.includes("python")) return <PythonIcon />;
   if (s.includes("java") && !s.includes("script")) return <JavaIcon />;
   if (s.includes("php")) return <PhpIcon />;
@@ -74,7 +64,7 @@ export default function DomainIcon({ slug, hasContent = true, size = 52 }) {
 function PythonIcon() {
   return (
     <svg {...SVG_BASE} className="domain-icon domain-icon--python">
-      <rect x="8"  y="10" width="30" height="22" rx="6" ry="6" />
+      <rect x="8" y="10" width="30" height="22" rx="6" ry="6" />
       <rect x="26" y="32" width="30" height="22" rx="6" ry="6" />
       <circle className="py-eye py-eye--top" cx="14" cy="16" r="1.6" fill="currentColor" stroke="none" />
       <circle className="py-eye py-eye--bot" cx="50" cy="48" r="1.6" fill="currentColor" stroke="none" />
@@ -139,19 +129,7 @@ function FrontendIcon() {
 function UnknownIcon() {
   return (
     <svg {...SVG_BASE} className="domain-icon domain-icon--unknown">
-      <text
-        x="32" y="42"
-        textAnchor="middle"
-        fontFamily="'Space Mono', ui-monospace, monospace"
-        fontSize="28"
-        fontWeight="700"
-        fill="currentColor"
-        stroke="none"
-      >
-        <tspan className="qm qm--1">?</tspan>
-        <tspan className="qm qm--2" dx="2">?</tspan>
-        <tspan className="qm qm--3" dx="2">?</tspan>
-      </text>
+      <text x="32" y="42" textAnchor="middle" fontFamily="monospace" fontSize="28" fontWeight="700" fill="currentColor" stroke="none">???</text>
     </svg>
   );
 }

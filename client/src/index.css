@@ -1888,3 +1888,22 @@ footer {
     background-color: var(--accent) !important;
   }
 }
+/* ── Контакт-карточки (EMAIL / TELEGRAM) ── */
+.contact-card-label {
+  color: var(--accent-ink);
+  transition: color 160ms ease;
+}
+.contact-card-value {
+  color: var(--fg);
+  transition: color 160ms ease;
+}
+.contact-card:hover {
+  background: #e5ff00 !important;
+  color: #000 !important;
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--fg);
+}
+.contact-card:hover .contact-card-label,
+.contact-card:hover .contact-card-value {
+  color: #000 !important;
+}

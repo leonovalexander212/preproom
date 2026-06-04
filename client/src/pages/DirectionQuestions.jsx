@@ -299,7 +299,7 @@ export default function DirectionQuestions() {
           }}
         >
           <Link
-            to="/"
+            to="/directions"
             data-testid="crumb-home"
             style={{ color: "var(--accent-ink)", textDecoration: "none", fontSize: 17, letterSpacing: "0.12em" }}
             onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
@@ -317,19 +317,26 @@ export default function DirectionQuestions() {
         </div>
 
         <div className="dq-header-grid" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(150px, 220px)", gap: 40, alignItems: "end" }}>
+           {(() => {
+            const dirName = data?.direction?.name || slug?.toUpperCase() || "";
+            const len = dirName.length;
+            const lenClass = len >= 13 ? "direction-questions-title--xlong" : len >= 8 ? "direction-questions-title--long" : "";
+            return (
            <h1
-            className="display direction-questions-title dq-direction-title"
+            className={`display direction-questions-title dq-direction-title ${lenClass}`}
             data-testid="direction-questions-title"
             style={{
-              fontSize: "clamp(48px, 7vw, 110px)", margin: 0, color: "var(--fg)",
+              fontSize: "clamp(32px, 7vw, 110px)", margin: 0, color: "var(--fg)",
               pointerEvents: "none", minWidth: 0, lineHeight: 1.05,
-              wordBreak: "keep-all", overflowWrap: "normal", hyphens: "none",
+              whiteSpace: "nowrap", hyphens: "none",
             }}
           >
-            <span className="glitch" data-text={data?.direction?.name || slug?.toUpperCase()} style={{ whiteSpace: "nowrap", display: "inline-block" }}>
-              {data?.direction?.name || slug?.toUpperCase()}
+            <span className="glitch" data-text={dirName} style={{ whiteSpace: "nowrap", display: "inline-block" }}>
+              {dirName}
             </span>
           </h1>
+            );
+          })()}
           <div className="dq-counter-box" data-testid="dq-counter-box" style={{
             border: "2px solid var(--fg)", padding: "20px 28px",
             background: "var(--card)", boxShadow: "6px 6px 0 var(--accent)",
