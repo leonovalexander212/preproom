@@ -90,28 +90,39 @@ function DirectionTestPopup({ onClose }) {
       style={{
         position: "fixed", inset: 0, zIndex: 9998,
         background: "rgba(0,0,0,0.78)", backdropFilter: "blur(4px)",
-        display: "grid", placeItems: "center", padding: 20,
+        display: "grid", placeItems: "center", padding: 16,
       }}>
       <div onClick={(e) => e.stopPropagation()}
         style={{
-          width: "min(560px, 100%)", background: "var(--bg)",
-          border: "2px solid var(--fg)", boxShadow: "10px 10px 0 var(--accent)",
-          padding: 36,
+          width: "min(520px, 100%)", maxHeight: "calc(100vh - 32px)", overflowY: "auto",
+          background: "var(--bg)", position: "relative",
+          border: "2px solid var(--fg)", boxShadow: "8px 8px 0 var(--accent)",
+          padding: "clamp(20px, 6vw, 36px)",
         }}>
 
-        <div className="display" style={{ fontSize: 48, marginTop: 14, lineHeight: 0.95 }}>
+        <button
+          onClick={decline}
+          aria-label="Закрыть"
+          style={{
+            position: "absolute", top: 12, right: 12,
+            width: 40, height: 40, lineHeight: "36px", textAlign: "center",
+            background: "transparent", color: "#ff5b00",
+            border: "2px solid #ff5b00", fontSize: 20, fontWeight: 800,
+            cursor: "pointer", padding: 0,
+          }}>
+          ✕
+        </button>
+
+        <div className="display" style={{ fontSize: "clamp(30px, 8vw, 48px)", marginTop: 8, lineHeight: 0.95, paddingRight: 44 }}>
           НЕ ЗНАЕШЬ,<br />
           <span style={{ color: "var(--accent-ink)" }}>С ЧЕГО НАЧАТЬ?</span>
         </div>
-        <p style={{ marginTop: 18, color: "var(--fg-dim)", fontSize: 14, lineHeight: 1.6 }}>
+        <p style={{ marginTop: 16, color: "var(--fg-dim)", fontSize: "clamp(13px, 3.5vw, 14px)", lineHeight: 1.6 }}>
           Ответь на 10 вопросов и мы подберём IT-направление для тебя.
           Никаких тяжёлых терминов. Честно. Всего 2 минуты.
         </p>
-        <div style={{ display: "flex", gap: 10, marginTop: 24, flexWrap: "wrap" }}>
-          <button onClick={accept} className="btn-accent">ПРОЙТИ ТЕСТ ↗</button>
-          <button onClick={decline} className="btn-ghost" style={{ marginLeft: "auto" }}>ПОЗЖЕ</button>
-
-          
+        <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
+          <button onClick={accept} className="btn-accent" style={{ flex: 1 }}>ПРОЙТИ ТЕСТ ↗</button>
         </div>
       </div>
     </div>

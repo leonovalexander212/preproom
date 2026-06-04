@@ -320,15 +320,19 @@ export default function DirectionQuestions() {
            {(() => {
             const dirName = data?.direction?.name || slug?.toUpperCase() || "";
             const len = dirName.length;
-            const lenClass = len >= 13 ? "direction-questions-title--xlong" : len >= 8 ? "direction-questions-title--long" : "";
+            // Динамический размер: чем длиннее имя, тем меньше vw-коэффициент,
+            // чтобы текст ВСЕГДА помещался в одну строку даже на 320px.
+            const vwCoef = len <= 6 ? 13 : len <= 9 ? 10 : len <= 13 ? 7.2 : 5.6;
+            const maxPx = len <= 6 ? 110 : len <= 9 ? 90 : len <= 13 ? 64 : 48;
+            const titleFont = `clamp(18px, ${vwCoef}vw, ${maxPx}px)`;
             return (
            <h1
-            className={`display direction-questions-title dq-direction-title ${lenClass}`}
+            className="display direction-questions-title dq-direction-title"
             data-testid="direction-questions-title"
             style={{
-              fontSize: "clamp(32px, 7vw, 110px)", margin: 0, color: "var(--fg)",
+              fontSize: titleFont, margin: 0, color: "var(--fg)",
               pointerEvents: "none", minWidth: 0, lineHeight: 1.05,
-              whiteSpace: "nowrap", hyphens: "none",
+              whiteSpace: "nowrap", hyphens: "none", maxWidth: "100%",
             }}
           >
             <span className="glitch" data-text={dirName} style={{ whiteSpace: "nowrap", display: "inline-block" }}>
