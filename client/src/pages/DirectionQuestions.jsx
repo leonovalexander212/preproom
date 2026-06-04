@@ -321,21 +321,13 @@ export default function DirectionQuestions() {
 
         <div className="dq-header-grid" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(150px, 220px)", gap: 40, alignItems: "end" }}>
            {(() => {
-            const dirName = data?.direction?.name || slug?.toUpperCase() || "";
-            const len = dirName.length;
-            // Размер шрифта по длине: короткие — крупно, длинные — мельче
-            // <=9 символов (PYTHON, FRONTEND, JAVA): крупный
-            // 10-13 (DATA SCIENCE, AI ENGINEER): средний
-            // >=14 (BUSINESS ANALYST, AQA / AUTOMATION): мелкий
-            const titleFont =
-              len <= 9  ? "clamp(40px, 9vw, 110px)" :
-              len <= 13 ? "clamp(32px, 6vw, 78px)"  :
-                          "clamp(26px, 4.6vw, 60px)";
+            // Заглушка из slug: дефисы → пробелы, чтобы при загрузке не мелькал "-"
+            const dirName = data?.direction?.name || (slug || "").toUpperCase().replace(/-/g, " ");
             return (
            <h1
              className="display direction-questions-title dq-direction-title"
              data-testid="direction-questions-title"
-             style={{ margin: 0, color: "var(--fg)", pointerEvents: "none", minWidth: 0, fontSize: titleFont }}
+             style={{ margin: 0, color: "var(--fg)", pointerEvents: "none", minWidth: 0, fontSize: "clamp(34px, 6vw, 84px)" }}
            >
              <span className="glitch" data-text={dirName}>
                {dirName}
