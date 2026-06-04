@@ -65,6 +65,62 @@ function useViewportWidth() {
   return width;
 }
 
+// Авто-подгонка размера заголовка: ужимает шрифт пока текст не влезет в одну строку
+function AutoFitTitle({ text, className, maxFont = 110, minFont = 16 }) {
+  const wrapRef = useRef(null);
+  const textRef = useRef(null);
+  const [fontSize, setFontSize] = useState(maxFont);
+
+  React.useLayoutEffect(() => {
+    const wrap = wrapRef.current;
+    const el = textRef.current;
+    if (!wrap || !el) return;
+
+    const fit = () => {
+      const avail = wrap.clientWidth;
+      if (!avail) return;
+      let size = maxFont;
+      el.style.fontSize = size + "px";
+      // Ужимаем пока ширина текста больше доступной
+      let guard = 0;
+      while (el.scrollWidth > avail && size > minFont && guard < 200) {
+        size -= 1;
+        el.style.fontSize = size + "px";
+        guard++;
+      }
+      setFontSize(size);
+    };
+
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(wrap);
+    // Перезапуск после загрузки шрифтов
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(fit);
+    }
+    return () => ro.disconnect();
+  }, [text, maxFont, minFont]);
+
+  return (
+    <div ref={wrapRef} style={{ width: "100%", minWidth: 0, overflow: "hidden" }}>
+      <h1
+        ref={textRef}
+        className={className}
+        data-testid="direction-questions-title"
+        style={{
+          fontSize: fontSize + "px", margin: 0, color: "var(--fg)",
+          pointerEvents: "none", lineHeight: 1.05, whiteSpace: "nowrap",
+          display: "inline-block", maxWidth: "100%",
+        }}
+      >
+        <span className="glitch" data-text={text} style={{ whiteSpace: "nowrap", display: "inline-block" }}>
+          {text}
+        </span>
+      </h1>
+    </div>
+  );
+}
+
 export default function DirectionQuestions() {
   const { slug } = useParams();
   const [data, setData] = useState(null);
@@ -171,9 +227,7 @@ export default function DirectionQuestions() {
           }
 
           .direction-questions-title .glitch {
-            white-space: normal;
-            overflow-wrap: anywhere;
-            word-break: normal;
+            white-space: nowrap;
           }
 
           .dq-counter-box {
@@ -215,9 +269,7 @@ export default function DirectionQuestions() {
           }
 
           .direction-questions-title .glitch {
-            white-space: normal !important;
-            overflow-wrap: anywhere;
-            word-break: normal;
+            white-space: nowrap !important;
           }
 
           .dq-counter-box {
@@ -317,30 +369,12 @@ export default function DirectionQuestions() {
         </div>
 
         <div className="dq-header-grid" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(150px, 220px)", gap: 40, alignItems: "end" }}>
-           {(() => {
-            const dirName = data?.direction?.name || slug?.toUpperCase() || "";
-            const len = dirName.length;
-            // Динамический размер: чем длиннее имя, тем меньше vw-коэффициент,
-            // чтобы текст ВСЕГДА помещался в одну строку даже на 320px.
-            const vwCoef = len <= 6 ? 13 : len <= 9 ? 10 : len <= 13 ? 7.2 : 5.6;
-            const maxPx = len <= 6 ? 110 : len <= 9 ? 90 : len <= 13 ? 64 : 48;
-            const titleFont = `clamp(18px, ${vwCoef}vw, ${maxPx}px)`;
-            return (
-           <h1
-            className="display direction-questions-title dq-direction-title"
-            data-testid="direction-questions-title"
-            style={{
-              fontSize: titleFont, margin: 0, color: "var(--fg)",
-              pointerEvents: "none", minWidth: 0, lineHeight: 1.05,
-              whiteSpace: "nowrap", hyphens: "none", maxWidth: "100%",
-            }}
-          >
-            <span className="glitch" data-text={dirName} style={{ whiteSpace: "nowrap", display: "inline-block" }}>
-              {dirName}
-            </span>
-          </h1>
-            );
-          })()}
+           <AutoFitTitle
+             text={data?.direction?.name || slug?.toUpperCase() || ""}
+             className="display direction-questions-title dq-direction-title"
+             maxFont={110}
+             minFont={16}
+           />
           <div className="dq-counter-box" data-testid="dq-counter-box" style={{
             border: "2px solid var(--fg)", padding: "20px 28px",
             background: "var(--card)", boxShadow: "6px 6px 0 var(--accent)",
