@@ -2,13 +2,13 @@ import 'dotenv/config';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { prisma } from '../src/lib/prisma';
-import { llm } from '../src/lib/llm';
+import { ai, cleanupModel, askJson, sleep as aiSleep } from './_ai';
 import { pipeline, type FeatureExtractionPipeline } from '@xenova/transformers';
 
 // Настройки
 const DIRECTION_SLUG = process.argv[2] ?? 'python';
 const SKIP_LLM = process.argv.includes('--skip-llm');
-const SIMILARITY_THRESHOLD = 0.88;          // greedy complete-linkage
+const SIMILARITY_THRESHOLD = 0.84;          // ниже = больше кандидатов (LLM потом разобьёт)
 const EMBEDDING_MODEL = 'Xenova/multilingual-e5-small';
 const LLM_DELAY_MS = 250;                    // Groq спокойно держит 30 req/min
 const LLM_MAX_RETRIES = 3;
@@ -113,61 +113,52 @@ function cluster(questions: QuestionRow[], embeddings: number[][]): QuestionRow[
 
 // ==================== LLM CONFIRMATION (с ретраями) ====================
 
-async function confirmCluster(members: QuestionRow[]): Promise<Cluster | null> {
-  const list = members.map((m, i) => `${i + 1}. ${m.text}`).join('\n');
+// ==================== LLM: разбиение кластера на подгруппы ====================
 
-  const prompt = `Ты анализируешь список вопросов с технических собеседований по Python.
-Эти вопросы были автоматически сгруппированы как семантически похожие.
+// Модель получает кластер похожих вопросов и разбивает его на подгруппы
+// настоящих дубликатов. Для каждой подгруппы (>=2) выбирает канонический.
+// Это решает проблему, когда эмбеддинги слепили рядом разные вопросы.
+type LlmGroup = { indices: number[]; canonical: string };
+
+async function confirmCluster(members: QuestionRow[]): Promise<Cluster[]> {
+  const list = members.map((m, i) => `${i + 1}. ${m.text}`).join("\n");
+
+  const prompt = `Ниже группа вопросов с IT-собеседований по теме "${DIRECTION_SLUG}", автоматически собранных как похожие.
+Некоторые — это ОДИН И ТОТ ЖЕ вопрос разными словами, некоторые — РАЗНЫЕ вопросы.
 
 Вопросы:
 ${list}
 
-Задача:
-1. Определи, все ли они действительно об одной и той же теме (возможны разные формулировки одного вопроса).
-2. Если да — сформулируй самый чёткий и полный канонический вариант вопроса.
-3. Если это разные вопросы — верни false.
+Задача: сгруппируй НОМЕРА вопросов, которые означают по сути одно и то же (дубликаты-перефразировки).
+- В одну подгруппу объединяй ТОЛЬКО настоящие дубликаты (один и тот же смысл).
+- Разные вопросы НЕ объединяй, даже если тема близкая.
+- Для каждой подгруппы выбери самую чёткую и полную формулировку как каноническую.
+- Вопросы, у которых нет дубликатов, не включай никуда.
 
-Ответь СТРОГО в формате JSON без markdown, без пояснений:
-{"same": true, "canonical": "Канонический вопрос здесь"}
-или
-{"same": false}`;
+Верни СТРОГО JSON без markdown:
+{"groups": [{"indices": [1, 3], "canonical": "Чёткая формулировка"}, {"indices": [2, 5, 6], "canonical": "..."}]}
+Если дубликатов нет вообще: {"groups": []}`;
 
-  for (let attempt = 1; attempt <= LLM_MAX_RETRIES; attempt++) {
-    try {
-      const response = await llm.client.chat.completions.create({
-        model: llm.model,
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.1,
-      });
+  const parsed = await askJson<{ groups: LlmGroup[] }>(prompt, { temperature: 0.1 });
+  if (!parsed?.groups?.length) return [];
 
-      const content = response.choices[0]?.message?.content ?? '';
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) return null;
-
-      const parsed = JSON.parse(jsonMatch[0]) as
-        | { same: true; canonical: string }
-        | { same: false };
-
-      if (!parsed.same) return null;
-
-      return {
-        canonicalText: parsed.canonical,
-        canonicalDifficulty: pickMinDifficulty(members),
-        members,
-      };
-    } catch (error: any) {
-      const is429 = error?.status === 429 || String(error?.message).includes('429');
-      if (is429 && attempt < LLM_MAX_RETRIES) {
-        const backoff = LLM_DELAY_MS * attempt * 2;
-        console.warn(`    ⏳ Rate limit, ждём ${backoff / 1000}s (попытка ${attempt}/${LLM_MAX_RETRIES})...`);
-        await sleep(backoff);
-        continue;
-      }
-      console.warn(`    ⚠️ Пропуск группы: ${error?.message}`);
-      return null;
-    }
+  const result: Cluster[] = [];
+  for (const g of parsed.groups) {
+    const groupMembers = (g.indices || [])
+      .map((idx) => members[idx - 1])
+      .filter((m): m is QuestionRow => Boolean(m));
+    // дубль = минимум 2 вопроса
+    if (groupMembers.length < 2) continue;
+    const canonical = (g.canonical && g.canonical.trim())
+      ? g.canonical.trim()
+      : [...groupMembers].sort((a, b) => b.text.length - a.text.length)[0].text;
+    result.push({
+      canonicalText: canonical,
+      canonicalDifficulty: pickMinDifficulty(groupMembers),
+      members: groupMembers,
+    });
   }
-  return null;
+  return result;
 }
 
 // ==================== MAIN ====================
@@ -223,9 +214,9 @@ async function main() {
 
     for (let i = 0; i < candidateClusters.length; i++) {
       process.stdout.write(`    ${i + 1}/${candidateClusters.length}`);
-      const result = await confirmCluster(candidateClusters[i]);
-      if (result) confirmed.push(result);
-      process.stdout.write(` ${result ? '✓' : '—'}\n`);
+      const subClusters = await confirmCluster(candidateClusters[i]);
+      confirmed.push(...subClusters);
+      process.stdout.write(` ${subClusters.length > 0 ? "✓ +" + subClusters.length : "—"}\n`);
       if (i < candidateClusters.length - 1) await sleep(LLM_DELAY_MS);
     }
     console.log(`\n  ✓ Подтверждено групп: ${confirmed.length}`);

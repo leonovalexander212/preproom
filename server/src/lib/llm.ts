@@ -1,9 +1,9 @@
-﻿import 'dotenv/config';
+import 'dotenv/config';
 import OpenAI from 'openai';
 
 // Universal LLM client. Provider selection via LLM_PROVIDER env.
 
-type Provider = 'groq' | 'ollama';
+type Provider = 'groq' | 'ollama' | 'openrouter';
 
 const provider = (process.env.LLM_PROVIDER ?? 'groq') as Provider;
 

@@ -16,7 +16,9 @@
     "test:watch": "vitest",
     "dedupe:analyze": "tsx scripts/dedupe-analyze.ts",
     "dedupe:apply": "tsx scripts/dedupe-apply.ts",
-    "classify": "tsx scripts/classify-questions.ts"
+    "classify": "tsx scripts/classify-questions.ts",
+    "junk:analyze": "tsx scripts/classify-junk.ts",
+    "junk:apply": "tsx scripts/classify-junk.ts --apply-only"
   },
   "keywords": [],
   "author": "",
