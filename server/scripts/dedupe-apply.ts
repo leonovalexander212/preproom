@@ -39,68 +39,47 @@ async function main() {
   for (const group of approved) {
     const [canonical, ...duplicates] = group.members;
     const canonicalNormalized = normalize(group.canonical);
-
-    // Все ID участников этой группы — их нормализации обновятся/удалятся
-    const groupMemberIds = group.members.map((m) => m.id);
-
-    // Проверяем, нет ли ВНЕ группы вопроса с таким же normalizedText
-    const conflicting = await prisma.question.findFirst({
-      where: {
-        directionId: direction.id,
-        normalizedText: canonicalNormalized,
-        id: { notIn: groupMemberIds },
-      },
-    });
-
-    if (conflicting) {
-      console.warn(`  ⚠️  Группа "${group.canonical.slice(0, 60)}..." пропущена: конфликт с существующим вопросом`);
-      skippedGroups++;
-      continue;
-    }
+    const dupIds = duplicates.map((d) => d.id);
 
     try {
-      // 1. Обновляем канонический
-      await prisma.question.update({
-        where: { id: canonical.id },
-        data: {
-          text: group.canonical,
-          normalizedText: canonicalNormalized,
-          difficulty: group.difficulty,
-        },
-      });
-
-      // 2. Переносим связи и удаляем дубликаты
+      // 1. Переносим связи с видео на канонический (дедуп связей)
       for (const dup of duplicates) {
-        const links = await prisma.interviewQuestion.findMany({
-          where: { questionId: dup.id },
-        });
-
+        const links = await prisma.interviewQuestion.findMany({ where: { questionId: dup.id } });
         for (const link of links) {
           const existing = await prisma.interviewQuestion.findUnique({
             where: {
-              interviewId_questionId: {
-                interviewId: link.interviewId,
-                questionId: canonical.id,
-              },
+              interviewId_questionId: { interviewId: link.interviewId, questionId: canonical.id },
             },
           });
-
           if (!existing) {
-            await prisma.interviewQuestion.update({
-              where: { id: link.id },
-              data: { questionId: canonical.id },
-            });
+            await prisma.interviewQuestion.update({ where: { id: link.id }, data: { questionId: canonical.id } });
             relinkedInterviews++;
           } else {
             await prisma.interviewQuestion.delete({ where: { id: link.id } });
           }
         }
+      }
 
-        await prisma.question.delete({ where: { id: dup.id } });
-        mergedQuestions++;
+      // 2. Удаляем дубли ПЕРЕД обновлением канона (deleteMany не падает если что-то уже удалено)
+      const del = await prisma.question.deleteMany({ where: { id: { in: dupIds } } });
+      mergedQuestions += del.count;
+
+      // 3. Обновляем текст канона — мягко: если всё равно конфликт уникальности
+      //    (есть похожий вопрос вне группы), дубли уже слиты, просто оставляем старый текст канона.
+      try {
+        await prisma.question.update({
+          where: { id: canonical.id },
+          data: {
+            text: group.canonical,
+            normalizedText: canonicalNormalized,
+            difficulty: group.difficulty,
+          },
+        });
+      } catch {
+        console.warn(`  ℹ️  Текст канона не обновлён (конфликт вне группы), но дубли слиты: "${group.canonical.slice(0, 50)}..."`);
       }
     } catch (e: any) {
-      console.warn(`  ⚠️  Ошибка в группе "${group.canonical.slice(0, 60)}...": ${e?.message}`);
+      console.warn(`  ⚠️  Ошибка в группе "${group.canonical.slice(0, 50)}...": ${e?.message}`);
       skippedGroups++;
     }
   }
