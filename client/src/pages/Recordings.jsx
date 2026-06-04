@@ -460,24 +460,34 @@ function PageJumpInput({ totalPages, onJump }) {
 
 /* ===== helper ===== */
 function pageRange(current, total) {
-  const out = [];
-  const push = (v) => out.push(v);
-
+  // Всегда показываем: 1 … [окно из 3 вокруг текущей] … last
+  // Структура стабильна, окно не прыгает.
   if (total <= 7) {
-    for (let i = 1; i <= total; i++) push(i);
-    return out;
+    return Array.from({ length: total }, (_, i) => i + 1);
   }
 
-  push(1);
-  if (current > 4) push("...");
+  const out = [];
+  const SIBLINGS = 1; // соседей с каждой стороны от текущей
 
-  const start = Math.max(2, current - 1);
-  const end = Math.min(total - 1, current + 1);
+  // Границы окна вокруг текущей
+  let start = current - SIBLINGS;
+  let end = current + SIBLINGS;
 
-  for (let i = start; i <= end; i++) push(i);
+  // Сдвигаем окно от краёв, чтобы ширина была постоянной (3 числа)
+  if (start < 2) {
+    start = 2;
+    end = start + SIBLINGS * 2;
+  }
+  if (end > total - 1) {
+    end = total - 1;
+    start = end - SIBLINGS * 2;
+  }
 
-  if (current < total - 3) push("...");
-  push(total);
+  out.push(1);
+  if (start > 2) out.push("..."); // многоточие слева
+  for (let i = start; i <= end; i++) out.push(i);
+  if (end < total - 1) out.push("..."); // многоточие справа
+  out.push(total);
 
   return out;
 }
