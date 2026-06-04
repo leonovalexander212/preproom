@@ -344,6 +344,9 @@ function Dropdown({ value, onChange, options, placeholder }) {
 
 /* ===== Pagination ===== */
 export function Pagination({ page, totalPages, onChange }) {
+  const [editing, setEditing] = useState(false);
+  const [val, setVal] = useState("");
+
   if (totalPages <= 1) return null;
 
   const arrowBtn = (disabled) => ({
@@ -360,6 +363,16 @@ export function Pagination({ page, totalPages, onChange }) {
     flexShrink: 0,
     transition: "background 140ms ease, color 140ms ease",
   });
+
+  const commit = () => {
+    const n = parseInt(val, 10);
+    if (!Number.isNaN(n)) {
+      const clamped = Math.min(Math.max(1, n), totalPages);
+      if (clamped !== page) onChange(clamped);
+    }
+    setEditing(false);
+    setVal("");
+  };
 
   return (
     <div
@@ -390,12 +403,68 @@ export function Pagination({ page, totalPages, onChange }) {
           fontSize: 13,
           letterSpacing: "0.12em",
           color: "var(--fg)",
-          minWidth: 150,
+          minWidth: 160,
           textAlign: "center",
           userSelect: "none",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 6,
         }}
       >
-        СТРАНИЦА <span style={{ color: "var(--accent-ink)", fontWeight: 700 }}>{page}</span> ИЗ {totalPages}
+        <span>СТРАНИЦА</span>
+        {editing ? (
+          <input
+            type="text"
+            inputMode="numeric"
+            autoFocus
+            value={val}
+            onChange={(e) => setVal(e.target.value.replace(/\D/g, ""))}
+            onBlur={commit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") { e.preventDefault(); commit(); }
+              if (e.key === "Escape") { setEditing(false); setVal(""); }
+            }}
+            placeholder={String(page)}
+            data-testid="pagination-jump-input"
+            className="mono"
+            style={{
+              width: 52,
+              height: 30,
+              textAlign: "center",
+              fontFamily: "'Space Mono', monospace",
+              fontSize: 13,
+              fontWeight: 700,
+              border: "2px solid var(--accent)",
+              background: "var(--bg)",
+              color: "var(--fg)",
+              outline: "none",
+              padding: 0,
+            }}
+          />
+        ) : (
+          <button
+            onClick={() => { setEditing(true); setVal(""); }}
+            title="Нажми, чтобы ввести номер страницы"
+            data-testid="pagination-current"
+            style={{
+              fontFamily: "'Space Mono', monospace",
+              fontSize: 13,
+              fontWeight: 700,
+              letterSpacing: "0.12em",
+              color: "var(--accent-ink)",
+              background: "transparent",
+              border: "none",
+              borderBottom: "2px dotted var(--accent-ink)",
+              cursor: "pointer",
+              padding: "0 2px",
+              lineHeight: 1.4,
+            }}
+          >
+            {page}
+          </button>
+        )}
+        <span>ИЗ {totalPages}</span>
       </div>
 
       <button

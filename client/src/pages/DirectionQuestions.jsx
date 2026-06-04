@@ -403,7 +403,7 @@ export default function DirectionQuestions() {
         ))}
 
         {totalPages > 1 && (
-          <Pagination page={page} totalPages={totalPages} onChange={(p) => { setPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); }} />
+          <Pagination page={page} totalPages={totalPages} onChange={(p) => setPage(p)} />
         )}
       </section>
 
