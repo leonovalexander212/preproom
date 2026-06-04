@@ -156,7 +156,6 @@ export default function DirectionQuestions() {
         }
 
         .direction-questions-title {
-          font-size: clamp(48px, 7vw, 110px);
           line-height: 0.95;
         }
 
@@ -321,15 +320,29 @@ export default function DirectionQuestions() {
         </div>
 
         <div className="dq-header-grid" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(150px, 220px)", gap: 40, alignItems: "end" }}>
+           {(() => {
+            const dirName = data?.direction?.name || slug?.toUpperCase() || "";
+            const len = dirName.length;
+            // Размер шрифта по длине: короткие — крупно, длинные — мельче
+            // <=9 символов (PYTHON, FRONTEND, JAVA): крупный
+            // 10-13 (DATA SCIENCE, AI ENGINEER): средний
+            // >=14 (BUSINESS ANALYST, AQA / AUTOMATION): мелкий
+            const titleFont =
+              len <= 9  ? "clamp(40px, 9vw, 110px)" :
+              len <= 13 ? "clamp(32px, 6vw, 78px)"  :
+                          "clamp(26px, 4.6vw, 60px)";
+            return (
            <h1
              className="display direction-questions-title dq-direction-title"
              data-testid="direction-questions-title"
-             style={{ margin: 0, color: "var(--fg)", pointerEvents: "none", minWidth: 0 }}
+             style={{ margin: 0, color: "var(--fg)", pointerEvents: "none", minWidth: 0, fontSize: titleFont }}
            >
-             <span className="glitch" data-text={data?.direction?.name || slug?.toUpperCase() || ""}>
-               {data?.direction?.name || slug?.toUpperCase() || ""}
+             <span className="glitch" data-text={dirName}>
+               {dirName}
              </span>
            </h1>
+            );
+          })()}
           <div className="dq-counter-box" data-testid="dq-counter-box" style={{
             border: "2px solid var(--fg)", padding: "20px 28px",
             background: "var(--card)", boxShadow: "6px 6px 0 var(--accent)",
