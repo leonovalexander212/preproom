@@ -6,7 +6,7 @@ vi.hoisted(() => {
   process.env.MOCK_SIGN_SECRET = 'test-secret-256-bits-long-string-1234567890';
 });
 
-vi.mock('../lib/prisma', () => ({ prisma: { direction: { findUnique: vi.fn() }, interview: { findMany: vi.fn() } } }));
+vi.mock('../lib/prisma', () => ({ prisma: { direction: { findUnique: vi.fn() }, question: { findMany: vi.fn() } } }));
 vi.mock('../lib/llm', () => ({ llm: { client: { chat: { completions: { create: vi.fn() } } }, model: 'test-model', provider: 'groq' } }));
 vi.mock('../lib/mdLoader', () => ({ loadTasks: vi.fn(() => [{ id: 't1', title: 'T1', description: 'D1', starterCode: 'c1', language: 'python', difficulty: 'easy' }, { id: 't2', title: 'T2', description: 'D2', starterCode: 'c2', language: 'python', difficulty: 'medium' }]), pickRandomTasks: vi.fn((arr: any[], n: number) => arr.slice(0, n)) }));
 
@@ -47,12 +47,12 @@ describe('POST /api/mock/start', () => {
     expect(res.body.error).toBe('bad_request');
   });
 
-  it('returns 503 when no eligible interviews', async () => {
+  it('returns 503 when no questions', async () => {
     mockPrisma.direction.findUnique.mockResolvedValue({ id: 'dir-python', slug: 'python' });
-    mockPrisma.interview.findMany.mockResolvedValue([]);
+    mockPrisma.question.findMany.mockResolvedValue([]);
     const res = await request(app()).post('/api/mock/start').send({ direction: 'python', grade: 'JUNIOR' });
     expect(res.status).toBe(503);
-    expect(res.body.error).toBe('no_eligible_interview');
+    expect(res.body.error).toBe('no_questions');
   });
 
   it('returns 500 when db direction missing', async () => {
