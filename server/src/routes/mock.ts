@@ -231,8 +231,7 @@ async function detectAiMarkers(answers: AnswerRecord[]): Promise<AntiCheatResult
   };
 }
 
-// Pick first 15 technical questions (no soft/behavioral) per video interview.
-const MIN_TECH_PER_INTERVIEW = 15;
+// Вопросы сессии: топ-150 технических (direction+grade) по частоте встречаемости -> шафл -> берём 15.
 const MAX_TECH_PER_INTERVIEW = 15;
 const CODING_TASKS_PER_SESSION = 2;
 
@@ -281,51 +280,60 @@ router.post('/start', async (req: Request, res: Response) => {
   const dbDir = await prisma.direction.findUnique({ where: { slug: meta.dbSlug } });
   if (!dbDir) return res.status(500).json({ error: 'db_direction_missing', message: `slug ${meta.dbSlug} не найден в БД` });
 
-  async function findEligibleInterviews(g: string) {
-    const ivs = await prisma.interview.findMany({
+  const POOL_SIZE = 150;
+
+  // Пул кандидатов: топ технических вопросов направления нужного грейда,
+  // отсортированных по частоте встречаемости в реальных интервью (число привязок к видео).
+  async function buildPool(difficulty: string | null) {
+    return prisma.question.findMany({
       where: {
         directionId: dbDir!.id,
-        title: { contains: g.toUpperCase() },
-        questions: {
-          some: { question: { type: 'TECHNICAL', difficulty: g as any } },
-        },
+        type: 'TECHNICAL',
+        ...(difficulty ? { difficulty: difficulty as any } : {}),
       },
       select: {
-        id: true, title: true,
-        questions: {
-          where: { question: { type: 'TECHNICAL', difficulty: g as any } },
-          select: {
-            id: true,
-            question: { select: { id: true, text: true, topic: { select: { name: true } } } },
-          },
-          orderBy: { id: 'asc' },
-        },
+        id: true,
+        text: true,
+        topic: { select: { name: true } },
+        _count: { select: { interviewQuestions: true } },
       },
+      orderBy: { interviewQuestions: { _count: 'desc' } },
+      take: POOL_SIZE,
     });
-    return ivs.filter((iv) => iv.questions.length >= MIN_TECH_PER_INTERVIEW);
   }
 
-  let eligible = await findEligibleInterviews(grade);
-  if (eligible.length === 0 && grade !== 'JUNIOR') {
-    eligible = await findEligibleInterviews('JUNIOR');
+  // Берём пул нужного грейда; если вопросов меньше чем нужно на сессию -
+  // добираем из всех грейдов направления (на случай маленьких разделов).
+  let pool = await buildPool(grade);
+  let usedFallback = false;
+  if (pool.length < MAX_TECH_PER_INTERVIEW) {
+    pool = await buildPool(null);
+    usedFallback = true;
   }
-  if (eligible.length === 0) {
+  if (pool.length === 0) {
     return res.status(503).json({
-      error: 'no_eligible_interview',
-      message: `Не нашёл в БД интервью с ≥${MIN_TECH_PER_INTERVIEW} техническими вопросами для ${meta.label} / ${grade}.`,
+      error: 'no_questions',
+      message: `Нет технических вопросов для ${meta.label} / ${grade}.`,
     });
   }
 
-  const picked = eligible[Math.floor(Math.random() * eligible.length)];
+  // Fisher-Yates: перемешиваем пул, поэтому каждая сессия - практически уникальный набор.
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  const limited = pool.slice(0, MAX_TECH_PER_INTERVIEW);
 
-  const limited = picked.questions.slice(0, MAX_TECH_PER_INTERVIEW);
-
-  const questions: MockQuestionRuntime[] = limited.map((iq) => ({
-    id: iq.question.id,
-    text: iq.question.text,
-    topic: iq.question.topic?.name ?? meta.label,
+  const questions: MockQuestionRuntime[] = limited.map((q) => ({
+    id: q.id,
+    text: q.text,
+    topic: q.topic?.name ?? meta.label,
     kind: 'theory',
   }));
+
+  const sourceLabel = usedFallback
+    ? `${meta.label} · случайная подборка`
+    : `${meta.label} · ${grade} · случайная подборка`;
 
   const allTasks = loadTasks(meta.dbSlug, grade);
   if (allTasks.length < CODING_TASKS_PER_SESSION) {
@@ -366,7 +374,7 @@ router.post('/start', async (req: Request, res: Response) => {
   const session = createSession({
     ip, direction, grade,
     questions, codingTasks: codingRuntime,
-    sourceInterviewTitle: picked.title,
+    sourceInterviewTitle: sourceLabel,
   });
   TASKS_BY_SESSION.set(session.id, new Map(pickedTasks.map((t) => [t.id, t])));
 
