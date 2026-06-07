@@ -33,6 +33,24 @@ function buildClient(): { client: OpenAI; model: string; provider: Provider } {
     };
   }
 
+  if (provider === 'openrouter') {
+    if (!process.env.OPENROUTER_API_KEY) {
+      throw new Error('OPENROUTER_API_KEY is not defined in .env (LLM_PROVIDER=openrouter)');
+    }
+    return {
+      provider: 'openrouter',
+      client: new OpenAI({
+        apiKey: process.env.OPENROUTER_API_KEY,
+        baseURL: 'https://openrouter.ai/api/v1',
+        defaultHeaders: {
+          'HTTP-Referer': 'https://preproom.ru',
+          'X-Title': 'PrepRoom',
+        },
+      }),
+      model: process.env.OPENROUTER_MODEL ?? 'google/gemini-2.5-flash',
+    };
+  }
+
   throw new Error(`Unknown LLM_PROVIDER: ${provider}`);
 }
 
