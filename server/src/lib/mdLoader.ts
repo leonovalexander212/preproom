@@ -56,7 +56,7 @@ function parseFrontmatter(raw: string): { fm: Record<string, string>; body: stri
 }
 
 function extractBetweenHeading(body: string, heading: string): string {
-  const re = new RegExp(`^#\\s+${heading}\\s*\\r?\\n([\\s\\S]*?)(?=^#\\s+|$(?![\\s\\S]))`, 'mi');
+  const re = new RegExp(`^#\\s+${heading}\\s*\\r?\\n([\\s\\S]*?)(?=^#\\s+(?:Описание|Стартовый код|Тесты)\\s*$|$(?![\\s\\S]))`, 'mi');
   const m = body.match(re);
   return m ? m[1].trim() : '';
 }
