@@ -1,4 +1,4 @@
-export type Direction = 'frontend' | 'java' | 'python' | 'php' | 'csharp';
+export type Direction = 'frontend' | 'java' | 'python' | 'php' | 'csharp' | 'devops';
 export type Grade = 'JUNIOR' | 'MIDDLE' | 'SENIOR';
 
 export interface DirectionMeta {
@@ -18,6 +18,7 @@ export const DIRECTIONS: DirectionMeta[] = [
   { slug: 'frontend', label: 'FRONTEND', dbSlug: 'frontend', language: 'javascript', available: true },
   { slug: 'php',      label: 'PHP',      dbSlug: 'php',      language: 'php',        available: true },
   { slug: 'csharp',   label: 'C#',       dbSlug: 'csharp',   language: 'csharp',     available: true },
+  { slug: 'devops',   label: 'DEVOPS',   dbSlug: 'devops',   language: 'python',     available: true },
 ];
 
 export const GRADES: { slug: Grade; label: string; hint: string; available: boolean; disabledReason?: string }[] = [

@@ -263,7 +263,7 @@ router.get('/rate-limit', (req, res) => {
 /* --------------------------- start --------------------------- */
 
 const startSchema = z.object({
-  direction: z.enum(['frontend', 'java', 'python', 'php', 'csharp']),
+  direction: z.enum(['frontend', 'java', 'python', 'php', 'csharp', 'devops']),
   grade: z.enum(['JUNIOR', 'MIDDLE', 'SENIOR']),
 });
 
