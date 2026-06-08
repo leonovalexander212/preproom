@@ -77,6 +77,7 @@ export default function DirectionQuestions() {
   const [aiQuestion, setAiQuestion] = useState(null);
   const [counter, setCounter] = useState(0);
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
 
   const root = useRef(null);
   const prevSlugRef = useRef(slug);
@@ -93,7 +94,11 @@ export default function DirectionQuestions() {
     }
 
     const params = level !== "ALL" ? { difficulty: level } : {};
-    api.getDirectionQuestions(slug, params).then(setData).catch((e) => setError(e.message));
+    let cancelled = false;
+    api.getDirectionQuestions(slug, params)
+      .then((d) => { if (!cancelled) { setData(d); setLoading(false); } })
+      .catch((e) => { if (!cancelled) { setError(e.message); setLoading(false); } });
+    return () => { cancelled = true; };
   }, [slug, level]);
   useEffect(() => { setPage(1); }, [slug, tab, level, query]);
 
@@ -379,7 +384,7 @@ export default function DirectionQuestions() {
         {data?.direction?.hasDifficultyLevels !== false && (
           <div className="dq-levels" style={{ display: "flex", justifyContent: "center" }}>
             {[{ k: "ALL", l: "ВСЕ" }, { k: "JUNIOR", l: "JUNIOR" }, { k: "MIDDLE", l: "MIDDLE" }, { k: "SENIOR", l: "SENIOR" }].map((g) => (
-              <button key={g.k} onClick={() => setLevel(g.k)} data-testid={`dq-level-${g.k.toLowerCase()}`} className="mono dq-level-btn" style={{
+              <button key={g.k} onClick={() => { if (g.k !== level) { setLevel(g.k); setLoading(true); } }} data-testid={`dq-level-${g.k.toLowerCase()}`} className="mono dq-level-btn" style={{
                 background: level === g.k ? LEVEL_COLOR[g.k] || "var(--accent)" : "transparent",
                 color: level === g.k ? "#000" : "var(--fg-dim)",
                 border: "2px solid var(--fg)", padding: "10px 18px", cursor: "pointer",
@@ -398,12 +403,20 @@ export default function DirectionQuestions() {
       </section>
 
       <section className="dq-list-section" style={{ padding: "32px 28px 0", maxWidth: 1280, margin: "0 auto" }}>
-        {pageItems.map((q, i) => (
-          <QuestionRow key={q.id} q={q} idx={(page - 1) * PAGE + i} onAsk={() => setAiQuestion(q)} />
-        ))}
+        {loading ? (
+          <div className="mono" style={{ color: "var(--fg-dim)", letterSpacing: "0.3em", fontSize: 14, opacity: 0.7, padding: "80px 0", textAlign: "center", minHeight: "40vh" }}>
+            // ЗАГРУЗКА...
+          </div>
+        ) : (
+          <>
+            {pageItems.map((q, i) => (
+              <QuestionRow key={q.id} q={q} idx={(page - 1) * PAGE + i} onAsk={() => setAiQuestion(q)} />
+            ))}
 
-        {totalPages > 1 && (
-          <Pagination page={page} totalPages={totalPages} onChange={(p) => setPage(p)} />
+            {totalPages > 1 && (
+              <Pagination page={page} totalPages={totalPages} onChange={(p) => setPage(p)} />
+            )}
+          </>
         )}
       </section>
 
